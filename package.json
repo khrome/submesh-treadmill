@@ -1,19 +1,24 @@
 {
-  "name": "submesh-treadmill",
-  "version": "0.0.1",
-  "main": "submesh-treadmill.js",
-  "devDependencies": {
-    "chai": "^4.3.7",
-    "mocha": "^10.2.0"
-  },
-  "scripts": {
-    "lint": "./node_modules/.bin/eslint *.js src/*.js test/*.js",
-    "test": "./node_modules/.bin/mocha",
-    "container-test": "docker build . -t submesh-treadmill -f ./containers/test.dockerfile; docker logs --follow \"$(docker run -d submesh-treadmill)\""
-  },
-  "dependencies": {
-    "cannon-es": "^0.20.0",
-    "extended-emitter": "^1.1.2",
-    "web-worker": "^1.2.0"
-  }
+    "name": "submesh-treadmill",
+    "version": "0.0.1",
+    "main": "submesh-treadmill.js",
+    "devDependencies": {
+        "chai": "^4.3.7",
+        "mocha": "^10.2.0"
+    },
+    "scripts": {
+        "lint": "./node_modules/.bin/eslint *.js src/*.js test/*.js",
+        "test": "./node_modules/.bin/mocha",
+        "container-test": "docker build . -t submesh-treadmill -f ./containers/test.dockerfile; docker logs --follow \"$(docker run -d submesh-treadmill)\"",
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "extended-emitter": "^1.1.2",
+        "seed-random": "^2.2.0",
+        "stats.js": "^0.17.0",
+        "three": "^0.151.3",
+        "vite": "^4.2.1"
+    }
 }

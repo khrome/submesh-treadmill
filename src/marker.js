@@ -1,4 +1,3 @@
-import * as TWEEN from "@tweenjs/tween.js";
 import { Raycaster, Vector3, ArrowHelper } from "three";
 import { Emitter } from 'extended-emitter/browser-es6';
 

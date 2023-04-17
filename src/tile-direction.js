@@ -54,4 +54,5 @@ export class Tile {
     static offset = direction;
     static neighbors = neighbors;
     static groups = codirections;
+    static list = codirections[0].concat(codirections[1]).concat(codirections[2]);
 }

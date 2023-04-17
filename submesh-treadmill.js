@@ -45,10 +45,12 @@ export class Treadmill {
             },
             onMarkerExit:(marker, x, y)=>{
                 const submesh = this.submeshAt(x, y);
-                if()
+                if(submesh){
+                    submesh.addMarker(marker, x, y);
+                }
             }
         };
-        const submesh = await this.options.createSubmesh();
+        const submesh = await this.options.createSubmesh(x, y);
         return submesh;
     }
 
@@ -95,7 +97,7 @@ export class Treadmill {
     }
 
     positions(){
-        return Tick.groups[0].concat(Tick.groups[1]).concat(Tick.groups[2]);
+        return Tile.list;
     }
 
     activeSubmeshes(){
@@ -108,23 +110,26 @@ export class Treadmill {
 
     tick(delta){
         if(this.physicalWorld) this.physicalWorld.step(this.options.timestep || 1/60);
-        const submeshes = treadmillControl.activeSubmeshes()
+        const submeshes = this.activeSubmeshes()
         let submeshIndex = 0;
         for(; submeshIndex < submeshes.length; submeshIndex++){
-            (submeshes[submeshIndex]&& submeshes[submeshIndex].tick(delta, scene));
+            (submeshes[submeshIndex]&& submeshes[submeshIndex].tick(delta, this.scene));
         }
     }
 
-    getHeightAt (x, y){
-        const submesh = this.submeshAt(x, y);
+    getHeightAt (x, y, sub){
+        const submesh = sub || this.submeshAt(x, y);
+        const target = new Vector3(x, y, 30);
         if(submesh){
             groundRaycaster.set(
                 new Vector3(x, y, 30), 
                 dir.subVectors(new Vector3(x, y, 0), target).normalize()
             );
-            const intersections = groundRaycaster.intersectObjects( [submesh.mesh], false );
-            if(intersections[0] && intersections[0].point){
-                return intersections[0].point.z;
+            if(submesh.mesh){
+                const intersections = groundRaycaster.intersectObjects( [submesh.mesh], false );
+                if(intersections[0] && intersections[0].point){
+                    return intersections[0].point.z;
+                }
             }
         }
         return 0;
@@ -133,8 +138,8 @@ export class Treadmill {
     async setTreadmillState(workGroups){
         let asyncContext = null;
         workGroups.forEach((workList)=>{
-            const thisContext = Promise.all.apply({}, workList.map(()=> new Promise((resolve, reject)=>{
-                setTimeout(()=> { try{ 
+            const thisContext = Promise.all(workList.map((action)=> new Promise((resolve, reject)=>{
+                setTimeout(async ()=> { try{
                     if(typeof action === 'object'){
                         if(action.to){
                             this[action.to] = this[action.from];
@@ -144,23 +149,31 @@ export class Treadmill {
                                 throw new Error(`${action.to} has no position (does it exist in the scene?)`);
                             }
                             this[action.to].moveTo( this.scene, [
-                                direction[action.to].x * this.size, 
-                                direction[action.to].y * this.size
+                                Tile.offset[action.to].x * this.size, 
+                                Tile.offset[action.to].y * this.size
                             ]);
                         }else{ //move off
                             this[action.from].removeFrom(this.scene);
                             this[action.from] = null;
                         }
                     }else{ //strings are for loading
-                        const thisX = direction[action].x;
-                        const thisY = direction[action].y;
-                        const submesh =  this.createSubmesh(x, y);
-                        submesh.addTo(this.scene, new Vector3(
+                        const thisX = Tile.offset[action].x;
+                        const thisY = Tile.offset[action].y;
+                        const submesh =  await this.createSubmesh(
+                            Tile.offset[action].x, 
+                            Tile.offset[action].y
+                        );
+                        submesh.addTo(new Vector3(
                             thisX * submesh.size, 
                             thisY * submesh.size, 
-                            submesh.getHeightAt(x, y))
-                        );
-                        if(this && direction) this[direction] = submesh;
+                            this.getHeightAt(
+                                thisX * submesh.size, 
+                                thisY * submesh.size, 
+                                submesh
+                            )
+                        ), this.scene);
+                        console.log(action, submesh, this.scene);
+                        if(this && action) this[action] = submesh;
                     }
                     resolve(); 
                 }catch(ex) { reject(ex) } });

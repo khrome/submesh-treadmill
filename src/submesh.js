@@ -1,8 +1,4 @@
-import { createVoxelMesh } from "./voxel-mesh";
-import { createMarker, populateFromBiome} from "./game-objects";
-import { SIGNED_RED_GREEN_RGTC2_Format, Triangle, Vector3, Raycaster, Vector2 } from "three";
-import { isRuntimeOnly } from "vue";
-import * as CANNON from 'cannon-es';
+import { MeshPhongMaterial, DoubleSide, Vector3, Raycaster, Vector2, Mesh } from "three";
 import { Random } from "./random";
 
 const genericWarning = 'Submesh is a generic class and cannot be instantiated directly';
@@ -13,12 +9,18 @@ export class Submesh{
         this.size = 16; 
         this.mesh = this.createMesh(geometry);
         this.body = this.createPhysicalMesh(this.mesh);
-        this.markers = this.createMarkers();
+        this.markers = this.createMarkers() || [];
         this.options = options;
     }
 
     createMesh(geometry){
-        throw new Error(genericWarning)
+        const material = new MeshPhongMaterial({
+            color: '#000088',    // red (can also use a CSS color string here)
+            flatShading: false,
+            side: DoubleSide
+        });
+        const mesh = new Mesh( geometry, material );
+        return mesh;
     }
 
     createPhysicalMesh(geometry){
@@ -37,6 +39,7 @@ export class Submesh{
     }
 
     addTo(offset, scene, physicalWorld){
+        console.log('adding', this.mesh, offset);
         scene.add( this.mesh );
         this.mesh.position.set(offset.x, offset.y, 0);
         if(this.body && physicalWorld){
@@ -88,7 +91,7 @@ export class Submesh{
     }
 
     tick(){
-        if(this.mesh.position && this.body.position){
+        if(this.mesh.position && this.body && this.body.position){
             this.body.position.copy(this.mesh.position);
             this.body.quaternion.copy(this.mesh.quaternion);
         }
@@ -117,7 +120,7 @@ export class Submesh{
         }
     }
 
-    weld(partnerSubmesh, edge, target='that')=>{
+    weld(partnerSubmesh, edge, target='that'){
         weldSubmesh(submesh, partnerSubmesh, target, edge)
     }
     
