@@ -3,21 +3,33 @@ import { Random } from "./random";
 
 const genericWarning = 'Submesh is a generic class and cannot be instantiated directly';
 
+const groundRaycaster = new Raycaster( 
+    new Vector3(), 
+    new Vector3( 0, 1, 0 ), 
+    0, 100 
+);
+
+const dir = new Vector3();
+
 export class Submesh{
+    
+    static tileSize = 16;
+    
     constructor(geometry, tilePosition, options={}){
         //todo: scan geometry for size
-        this.size = 16; 
-        this.mesh = this.createMesh(geometry);
+        this.x = tilePosition.x;
+        this.y = tilePosition.y;
+        this.options = options;
+        this.size = Submesh.tileSize; 
+        this.mesh = this.createMesh(geometry, tilePosition);
         this.body = this.createPhysicalMesh(this.mesh);
         this.markers = this.createMarkers() || [];
-        this.options = options;
     }
 
     createMesh(geometry){
         const material = new MeshPhongMaterial({
-            color: '#000088',    // red (can also use a CSS color string here)
-            flatShading: false,
-            side: DoubleSide
+            color: "#00FF00",    // red (can also use a CSS color string here)
+            flatShading: false
         });
         const mesh = new Mesh( geometry, material );
         return mesh;
@@ -30,6 +42,25 @@ export class Submesh{
     createMarkers(){
         throw new Error(genericWarning)
     }
+    
+    moveTo(scene, point){
+        const from = this.mesh.position.clone();
+        const delta = {
+            x: point.x - from.x,
+            y: point.y - from.y
+        }
+        this.mesh.position.copy(point);
+        const newPoint = new Vector3();
+        let x = null;
+        let y = null;
+        console.log(delta, this.markers.length, [this.x, this.y]);
+        this.markers.forEach((marker)=>{
+            x = marker.mesh.position.x + delta.x;
+            y = marker.mesh.position.y + delta.y;
+            newPoint.set(x, y, this.getHeightAt(x, y) );
+            marker.moveTo(newPoint);
+        });
+    }
 
     refreshGeometry(){
         this.mesh.geometry.attributes.position.array = Float32Array.from(submesh.coords);
@@ -39,7 +70,6 @@ export class Submesh{
     }
 
     addTo(offset, scene, physicalWorld){
-        console.log('adding', this.mesh, offset);
         scene.add( this.mesh );
         this.mesh.position.set(offset.x, offset.y, 0);
         if(this.body && physicalWorld){
@@ -55,18 +85,18 @@ export class Submesh{
                 marker.y + offset.y, 
                 this.getHeightAt(marker.x + offset.x, marker.y + offset.y)
             );
-            if(position){
-                marker.mesh.position.x = marker.initialX || 0;
-                marker.mesh.position.y = marker.initialY || 0;
-                if(marker.body){
-                    marker.body.position.x = point.x;
-                    marker.body.position.y = point.y;
-                }
+            marker.mesh.position.set(
+                this.mesh.position.x + (marker.naturalX || 0),
+                this.mesh.position.y + (marker.naturalY || 0)
+            );
+            if(marker.body){
+                marker.body.position.x = point.x;
+                marker.body.position.y = point.y;
             }
             let raycaster = null;
-            if(target) raycaster = this.lookAt(target);
-            if(this.body && physicalWorld){
-                physicalWorld.addBody(this.body);
+            if(this.target) raycaster = this.lookAt(this.target);
+            if(marker.body && physicalWorld){
+                physicalWorld.addBody(marker.body);
                 if(target && options.velocity && raycaster){
                     //todo if debug, draw ray
                     this.body.velocity.set(
@@ -77,6 +107,20 @@ export class Submesh{
                 }
             }
         });
+    }
+    
+    getHeightAt(x, y){
+        const target = new Vector3(x, y, 30);
+        groundRaycaster.set(
+            new Vector3(x, y, 30), 
+            dir.subVectors(new Vector3(x, y, 0), target).normalize()
+        );
+        if(this.mesh){
+            const intersections = groundRaycaster.intersectObjects( [this.mesh], false );
+            if(intersections[0] && intersections[0].point){
+                return intersections[0].point.z;
+            }
+        }
     }
 
     removeFrom(scene, physicalWorld){
@@ -107,15 +151,18 @@ export class Submesh{
             marker = markers[markerIndex];
             x = marker.mesh.position.x;
             y = marker.mesh.position.y;
-            let action = 'east';
-            if(x - xOffset < 0) action = 'east';
-            if(x - xOffset > this.size) action = 'west';
-            if(y - yOffset < 0) action = 'south';
-            if(x - xOffset > this.size) action = 'north';
+            let action = '';
+            if((x - xOffset) < 0) action += 'east';
+            if((x - xOffset) > this.size) action += 'west';
+            if((y - yOffset) < 0) action += 'south';
+            if((y - yOffset) > this.size) action += 'north';
             if(action){
                 let index = this.markers.indexOf(marker);
-                this.markers.splice(index, 1);
-                if(this.options.onMarkerExit) this.options.onMarkerExit(marker, this, action);
+                if(index !== -1){
+                    this.markers.splice(index, 1);
+                    console.log('!', index, this.markers.indexOf(marker));
+                    if(this.options.onMarkerExit) this.options.onMarkerExit(marker, this, action);
+                };
             }
         }
     }
@@ -125,92 +172,6 @@ export class Submesh{
     }
     
 }
-
-/*export function createSubmesh(voxelMesh, x, y){
-    const submesh = {
-        voxels : voxelMesh.getSubmeshVoxels(x, y, 2)
-    };
-    submesh.coords = voxelMesh.getCoordsFromVoxels(x, y, 2, submesh.voxels);
-    const submeshRandom = new Random(voxelMesh.getSeed(x, y));
-    const markers = [];
-    submesh.submeshX = x;
-    submesh.submeshY = y;
-    submesh.markers = [];
-    const biome = populateFromBiome('forest', submeshRandom.random, submesh);
-    const material = biome.primaryMaterial();
-    submesh.mesh = voxelMesh.getSubmesh(x, y, 2, submesh.coords, material.visual);
-    submesh.size = voxelMesh.submeshSize;
-    submesh.body = new CANNON.Body({
-        shape: new CANNON.Trimesh(submesh.coords, submesh.coords.map((item, index)=>index)),
-        type: CANNON.Body.STATIC,
-        material: material.physical
-        //mass:5
-    });
-    submesh.body.astralType = 'submesh';
-
-    submesh.materials = ()=>{
-        return biome.materials();
-    };
-
-    submesh.addTo = (scene, [offsetX, offsetY]=[0, 0])=>{
-        addSubmesh(submesh, scene, [offsetX, offsetY]);
-    };
-
-    submesh.moveTo = (scene, [offsetX, offsetY]=[0, 0])=>{
-        const oldPosition = submesh.mesh.position.clone();
-        submesh.mesh.position.set(offsetX, offsetY, 0);
-        if(submesh.markers) submesh.markers.forEach((marker)=>{
-            //const local = marker.compute.local(submesh);
-            //const x = local.x + offsetX;
-            //const y = local.y + offsetY;
-            //scene.treadmill.getHeightAt(x, y)
-            marker.move(new Vector3(offsetX, offsetY, 0));
-        });
-        //submesh.mesh.position.set(offsetX, offsetY, 0);
-    };
-
-    submesh.removeFrom = (scene)=>{
-        removeSubmesh(submesh, scene);
-    };
-
-    submesh.init = (scene)=>{ //on add to mesh
-        try{
-            scene.treadmill.internal.physics.world.addBody(submesh.body);
-            submesh.body.position.copy(submesh.mesh.position)
-            submesh.body.quaternion.copy(submesh.mesh.quaternion);
-        }catch(ex){
-            console.log(ex);
-        }
-    };
-
-    submesh.tick = (delta, scene)=>{
-        if(submesh.mesh.position && submesh.body.position){
-            //submesh.mesh.position.copy(submesh.body.position);
-            //submesh.mesh.quaternion.copy(submesh.body.quaternion);
-            submesh.body.position.copy(submesh.mesh.position);
-            submesh.body.quaternion.copy(submesh.mesh.quaternion);
-        }
-        let markerIndex = 0;
-        const markers = submesh.markers;
-        if(markers) for(; markerIndex < markers.length; markerIndex++){
-            markers[markerIndex].tick(delta, this, scene)
-        }
-    }
-
-    submesh.refreshGeometry = (lowerBound, upperBound)=>{
-        //let faces = voxelMesh.getCoordsFromVoxels(x, y, 2, submesh.voxels);
-        //submesh.coords = faces;
-        submesh.mesh.geometry.attributes.position.array = Float32Array.from(submesh.coords);
-        submesh.mesh.geometry.attributes.position.needsUpdate = true;
-        submesh.mesh.material.needsUpdate = true;
-        submesh.mesh.geometry.computeVertexNormals();
-
-    }
-    submesh.weld = (partnerSubmesh, edge, target='that')=>{
-        weldSubmesh(submesh, partnerSubmesh, target, edge)
-    }
-    return submesh;
-}*/
 
 const weldSubmesh = (submeshA, submeshB, target, edge)=>{
     let llo = (submeshA.size-1)*submeshA.size*3*3;
@@ -297,34 +258,3 @@ const weldSubmesh = (submeshA, submeshB, target, edge)=>{
             break;
     }
 }
-
-/*const addSubmesh = (submesh, scene, [offsetX, offsetY]=[0, 0])=>{
-    scene.add( submesh.mesh );
-    submesh.mesh.position.set(offsetX, offsetY, 0);
-    submesh.init(scene);
-    try{
-        scene.treadmill.internal.physics.world.addBody(submesh.body);
-    }catch(ex){ console.log(ex) }
-    if(submesh.markers) submesh.markers.forEach((marker)=>{
-        scene.add( marker.mesh );
-        marker.mesh.position.set(marker.x + offsetX, marker.y + offsetY, 0);
-    })
-}
-
-const moveSubmesh = (submesh, scene, [offsetX, offsetY]=[0, 0])=>{
-    const currentOffsets = submesh.offsets();
-    submesh.mesh.position.set(offsetX, offsetY, 0);
-    if(submesh.markers) submesh.markers.forEach((marker)=>{
-        const x = marker.mesh.position.x - currentOffsets.x + offsetX;
-        const y = marker.mesh.position.y - currentOffsets.y + offsetY;
-        //scene.treadmill.getHeightAt(x, y)
-        marker.moveTo(new Vector3(x, y, 0), scene);
-    });
-}
-
-const removeSubmesh = (submesh, scene)=>{
-    scene.remove(submesh.mesh);
-    if(submesh.markers) submesh.markers.forEach((marker)=>{
-        scene.remove( marker.mesh );
-    })
-}*/

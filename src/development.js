@@ -5,6 +5,13 @@ const kvs = {}
 
 const kv = (name)=> kvs[name] || '';
 
+const digits = (num, places)=>{
+    let factor = 1;
+    let lcv=0;
+    for(;lcv < places; lcv++) factor = factor * 10;
+    return Math.floor(num*factor)/factor;
+}
+
 export class DevelopmentTools{
     constructor(options={}){
         this.options = options;
@@ -37,9 +44,56 @@ export class DevelopmentTools{
         scene.add( this.arrow );
     }
     
-    activateMeshTriangleSelection(container, renderer, scene, loop, camera){
+    activateMeshTriangleSelection(container, renderer, scene, camera, treadmill){
         this.isSelectingTriangles = true;
-        activateTriangleSelection(container, renderer, scene, loop, camera);
+        this.activateHoverInfo(container, renderer, scene, camera, treadmill);
+    }
+    
+    activateHoverInfo(container, renderer, scene, camera, treadmill){
+        container.addEventListener('mousemove', (event)=>{
+            var raycaster = new Raycaster(); // create once
+            var mouse = new Vector2(); // create once
+            mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+            mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+            raycaster.setFromCamera( mouse, camera );
+            var intersects = null;
+            try{ //can't do this mid-load
+                intersects = raycaster.intersectObjects( treadmill.activeSubmeshMeshes(), true );
+            }catch(ex){}
+            if(intersects && intersects[0]){
+                if(this.isSelectingTriangles){
+                    const geometry = intersects[0]?.object?.geometry;
+                    if(geometry){
+                        const offset = intersects[0].faceIndex * geometry.attributes.position.itemSize*3;
+                        const face = Array.prototype.slice.call(geometry.attributes.position.array, offset, offset+3*3);
+                        const submeshName = scene.treadmill.positionOfMesh(intersects[0].object);
+                        const submesh = scene.treadmill.submesh(submeshName);
+                        this.value({ 
+                            face, 
+                            submesh: submeshName,
+                            submeshX: submesh.submeshX,
+                            submeshY: submesh.submeshY,
+                            submeshTreadmillX: Math.floor(submesh.mesh.position.x/16),
+                            submeshTreadmillY: Math.floor(submesh.mesh.position.y/16)
+                        });
+                        selectTriangle(face, intersects[0], scene);
+                        if(this.panes.mesh) this.panes.mesh.refresh();
+                    }
+                }
+                if(this.isSelectingPoints){
+                    this.value('point', intersects[0].point);
+                    if(this.panes.mesh) this.panes.mesh.refresh();
+                }
+            }else{
+                this.value('face', []);
+                this.value('point', '');
+            }
+        });
+    }
+    
+    activateMeshPointSelection(container, renderer, scene, camera, treadmill){
+        this.isSelectingPoints = true;
+        this.activateHoverInfo(container, renderer, scene, camera, treadmill);
     }
     
     tickStart(){
@@ -170,12 +224,15 @@ const createBox = (type, target) => {
                 .concat(safeFace[stop]?Math.floor(safeFace[stop]*10000)/10000:'')
                 .join(', ') || ''
             }
+            const point = document.createTextNode(kvs.point?`${digits(kvs.point.x, 4)}, ${digits(kvs.point.y, 4)}`:'');
             const coord1 = document.createTextNode(safeCoord(0, 2));
             const coord2 = document.createTextNode(safeCoord(3, 5));
             const coord3 = document.createTextNode(safeCoord(6, 8));
             const bolded = document.createElement("b");
             bolded.appendChild(submeshName);
             thisContent.appendChild(bolded);
+            thisContent.appendChild(document.createElement("br"));
+            thisContent.appendChild(point);
             thisContent.appendChild(document.createElement("br"));
             thisContent.appendChild(coord1);
             thisContent.appendChild(document.createElement("br"));

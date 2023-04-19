@@ -1,4 +1,4 @@
-import { Vector3, Raycaster } from "three";
+import { Vector2, Vector3, Raycaster } from "three";
 import { Emitter } from 'extended-emitter/browser-es6';
 import { Submesh } from './src/submesh';
 import { MeshObject } from './src/object';
@@ -16,13 +16,16 @@ const dir = new Vector3();
 const timers = {}; //a single global debounce
 const debounce_leading = (func, name='default', timeout = 300)=>{
     return (...args) => {
-        if(!timers[name]) func.apply(this, args);
+        if(!timers[name]){
+            console.log('debounced execute')
+            func.apply(this, args);
+        }
         clearTimeout(timers[name]);
         timers[name] = setTimeout(() => { timers[name] = undefined; }, timeout);
     };
 }
 
-export { Submesh, MeshObject, Marker };
+export { Submesh, MeshObject, Marker, Tile };
 
 export class Treadmill {
     constructor(options={}, scene, physicalWorld) {
@@ -37,6 +40,8 @@ export class Treadmill {
             [ 'east', 'west' ],
             [ 'southeast', 'south', 'southwest']
         ]);
+        this.x = 2;
+        this.y = 2;
     }
 
     async createSubmesh(x, y){
@@ -56,27 +61,48 @@ export class Treadmill {
 
     blocked(handler){
         return debounce_leading((direction)=>{
-            this.move(direction, handler);
+            console.log('treadmill-move', direction)
+            this.moveDirection(direction, handler);
         }, 'treadmill', 500);
     }
 
-    addMarker(marker, x, y){ //world coords
-        const localX = x - (this.x-1); // this.x refers to current
-        const localY = y - (this.y-1); // this.y refers to current
-        marker.addTo(this.scene, new Vector3(localX, localY, this.getHeightAt(localX, localY)));
+    addMarker(marker, x, y, z){ //world coords
+        const localX = x - (this.x-1) * Submesh.tileSize; // this.x refers to current
+        const localY = y - (this.y-1) * Submesh.tileSize; // this.y refers to current
+        const submesh = this.submeshAt(localX, localY);
+        if(submesh){
+            marker.addTo(this.scene, new Vector3(localX, localY, z || this.getHeightAt(localX, localY)));
+            submesh.markers.push(marker);
+        }else{
+            console.log('this marker is off the stage', marker, x, y, z);
+        }
+    }
+    
+    addMarkerToStage(marker, x, y, z){ //treadmill coords coords: -16 - 32
+        const submesh = this.submeshAt(x, y);
+        console.log('xy', x, y, submesh);
+        if(submesh){
+            marker.addTo(this.scene, new Vector3(x, y, z || this.getHeightAt(x, y)));
+            submesh.markers.push(marker);
+            console.log('added');
+        }
     }
 
     submesh(position){ //pointless??, filter from whitelist?
         return this[position];
     }
-
-    submeshAt(x, y){ //treadmill coords
+    
+    submeshCellAt(x, y){
         let location = '';
         if(y > 16) location += 'north';
         if(y < 0) location += 'south';
         if(x > 16) location += 'west';
         if(x < 0) location += 'east';
-        return this.submesh(location || 'current');
+        return location || 'current';
+    }
+
+    submeshAt(x, y){ //treadmill coords
+        return this.submesh(this.submeshCellAt(x, y));
     }
 
     positionOfMesh(mesh){
@@ -140,18 +166,22 @@ export class Treadmill {
         workGroups.forEach((workList)=>{
             const thisContext = Promise.all(workList.map((action)=> new Promise((resolve, reject)=>{
                 setTimeout(async ()=> { try{
+                    console.log('action', action);
                     if(typeof action === 'object'){
                         if(action.to){
-                            this[action.to] = this[action.from];
-                            this[action.from] = null;
-                            if(!this[action.to].mesh.position){
+                            if(!this[action.from].mesh.position){
                                 //console.log(action.to, this[action.to])
                                 throw new Error(`${action.to} has no position (does it exist in the scene?)`);
                             }
-                            this[action.to].moveTo( this.scene, [
-                                Tile.offset[action.to].x * this.size, 
-                                Tile.offset[action.to].y * this.size
-                            ]);
+                            console.log('A', Tile.offset[action.to].x,  Submesh.tileSize);
+                            this[action.from].moveTo( this.scene, new Vector3(
+                                Tile.offset[action.to].x * Submesh.tileSize, 
+                                Tile.offset[action.to].y * Submesh.tileSize,
+                                0
+                            ));
+                            this[action.to] = this[action.from];
+                            this[action.from] = null;
+                            console.log('B')
                         }else{ //move off
                             this[action.from].removeFrom(this.scene);
                             this[action.from] = null;
@@ -160,8 +190,8 @@ export class Treadmill {
                         const thisX = Tile.offset[action].x;
                         const thisY = Tile.offset[action].y;
                         const submesh =  await this.createSubmesh(
-                            Tile.offset[action].x, 
-                            Tile.offset[action].y
+                            Tile.offset[action].x+this.x, 
+                            Tile.offset[action].y+this.y
                         );
                         submesh.addTo(new Vector3(
                             thisX * submesh.size, 
@@ -172,7 +202,6 @@ export class Treadmill {
                                 submesh
                             )
                         ), this.scene);
-                        console.log(action, submesh, this.scene);
                         if(this && action) this[action] = submesh;
                     }
                     resolve(); 
@@ -181,11 +210,12 @@ export class Treadmill {
             if(!asyncContext) asyncContext = thisContext;
             else asyncContext = asyncContext.then(thisContext);
         });
+        this.loading = asyncContext;
         await asyncContext;
     }
 
     async moveDirection(direction){
-        const dir = Tile.offsets[direction];
+        const dir = Tile.offset[direction];
         const queue = [];
         if(dir.y){
             Tile.groups.forEach((row, y)=>{
@@ -222,6 +252,6 @@ export class Treadmill {
     // Getter
     async move(direction, handler){
         await this.moveDirection(direction);
-        if(handler) handler(direction, Tile.offsets[direction]);
+        if(handler) handler(direction, Tile.offset[direction]);
     }
 }
