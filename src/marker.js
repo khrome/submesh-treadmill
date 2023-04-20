@@ -1,5 +1,7 @@
 import { Raycaster, Vector3, Vector2, ArrowHelper } from "three";
+import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
 import { Emitter } from 'extended-emitter/browser-es6';
+import { DevelopmentTools } from './development'
 
 const bbox = (ob)=>{
     if(ob.geometry && ob.geometry.boundingBox) return ob.boundingBox;
@@ -32,6 +34,12 @@ export class Marker {
             this.body = this.object.buildCollisionObject(this.mesh, this);
         }
         this.options = options;
+        if(this.options.shadow && this.options.shadow === 'mesh'){
+            this.shadowMesh = new ShadowMesh(this.mesh);
+        }
+        if(this.options.shadow && this.options.shadow === 'light'){
+            this.mesh.castShadow = true;
+        }
         this.random = options.random || Math.random;
         this.active = true; //todo: only if npc
         this.values = {};
@@ -76,12 +84,21 @@ export class Marker {
     }*/
     
     moveInOrientation = (directionVector, delta=1, target)=>{
-        const origin = this.boundingBox?this.boundingBox.getCenter():this.mesh.position;
+        let origin = null;
+        if(this.boundingBox){
+            origin = this.boundingBox.getCenter()
+        }else{
+            origin = this.mesh.position;
+            //origin = new Vector3();
+            //this.mesh.getWorldPosition(origin);
+        }
         const movementSpeed = 0.02;
         const maxDistance = movementSpeed * delta;
         directionVector.applyQuaternion(this.mesh.quaternion);
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
+        
+        // if(tools) tools.showRay(raycaster);
         
         if(target && origin && origin.distanceTo(target) < maxDistance){
             //todo: compute remaining time
@@ -97,27 +114,29 @@ export class Marker {
     // all movement functions either proceed to the target or their movement max, whichever comes first
     // and return the remaining delta when complete.
     forward(delta=1, target){ // +y
-        this.moveInOrientation(direction.forward, delta, target);
+        return this.moveInOrientation(direction.forward.clone(), delta, target);
     }
     
-    backward(delta, target){ // -y
-        this.moveInOrientation(direction.backward, delta, target);
+    backward(delta=1, target){ // -y
+        return this.moveInOrientation(direction.backward.clone(), delta, target);
     }
     
-    strafeRight(delta, target){ // +x
-        this.moveInOrientation(direction.right, delta, target);
+    strafeRight(delta=1, target){ // +x
+        return this.moveInOrientation(direction.right.clone(), delta, target);
     }
     
-    strafeLeft(delta, target){ // -x
-        this.moveInOrientation(direction.left, delta, target);
+    strafeLeft(delta=1, target){ // -x
+        return this.moveInOrientation(direction.left.clone(), delta, target);
     }
     
-    turnRight(delta, target){
-        
+    turnRight(delta=1, target){
+        const turnSpeed = 0.1;
+        this.mesh.rotation.z -= turnSpeed * delta;
     }
     
-    turnLeft(delta, target){
-        
+    turnLeft(delta=1, target){
+        const turnSpeed = 0.1;
+        this.mesh.rotation.z += turnSpeed * delta;
     }
 
     moveTo(point){
@@ -178,6 +197,10 @@ export class Marker {
 
     addTo(scene, position, target, options={}){
         scene.add(this.mesh);
+        if(this.shadowMesh){
+            console.log('added shadowmesh')
+            scene.add(this.shadowMesh);
+        }
         this.remove = ()=>{
             scene.remove(this.mesh);
             //todo: remove from submesh.markers, too
@@ -229,7 +252,6 @@ export class Marker {
             .to({x:this.animation.targX+xOffset, y:this.animation.targY+yOffset}, remainingMillis)
             .easing(TWEEN.Easing.Quadratic.Out)
             .onUpdate(() =>{
-                //console.log(coords)
                 this.mesh.position.set(coords.x, coords.y)
             })
         this.animation.start();

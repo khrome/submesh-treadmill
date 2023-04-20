@@ -32,6 +32,7 @@ export class Submesh{
             flatShading: false
         });
         const mesh = new Mesh( geometry, material );
+        mesh.receiveShadow = true;
         return mesh;
     }
 
@@ -53,7 +54,7 @@ export class Submesh{
         const newPoint = new Vector3();
         let x = null;
         let y = null;
-        console.log(delta, this.markers.length, [this.x, this.y]);
+        //console.log(delta, this.markers.length, [this.x, this.y]);
         this.markers.forEach((marker)=>{
             x = marker.mesh.position.x + delta.x;
             y = marker.mesh.position.y + delta.y;
@@ -80,6 +81,10 @@ export class Submesh{
         //todo: for
         if(this.markers) this.markers.forEach((marker)=>{
             scene.add( marker.mesh );
+            if(marker.shadowMesh){
+                console.log('shadow');
+                scene.add( marker.shadowMesh );
+            }
             marker.mesh.position.set(
                 marker.x + offset.x, 
                 marker.y + offset.y, 

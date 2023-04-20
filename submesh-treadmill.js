@@ -17,7 +17,6 @@ const timers = {}; //a single global debounce
 const debounce_leading = (func, name='default', timeout = 300)=>{
     return (...args) => {
         if(!timers[name]){
-            console.log('debounced execute')
             func.apply(this, args);
         }
         clearTimeout(timers[name]);
@@ -61,7 +60,6 @@ export class Treadmill {
 
     blocked(handler){
         return debounce_leading((direction)=>{
-            console.log('treadmill-move', direction)
             this.moveDirection(direction, handler);
         }, 'treadmill', 500);
     }
@@ -80,11 +78,9 @@ export class Treadmill {
     
     addMarkerToStage(marker, x, y, z){ //treadmill coords coords: -16 - 32
         const submesh = this.submeshAt(x, y);
-        console.log('xy', x, y, submesh);
         if(submesh){
             marker.addTo(this.scene, new Vector3(x, y, z || this.getHeightAt(x, y)));
             submesh.markers.push(marker);
-            console.log('added');
         }
     }
 
@@ -96,8 +92,8 @@ export class Treadmill {
         let location = '';
         if(y > 16) location += 'north';
         if(y < 0) location += 'south';
-        if(x > 16) location += 'west';
-        if(x < 0) location += 'east';
+        if(x > 16) location += 'east';
+        if(x < 0) location += 'west';
         return location || 'current';
     }
 
@@ -166,14 +162,11 @@ export class Treadmill {
         workGroups.forEach((workList)=>{
             const thisContext = Promise.all(workList.map((action)=> new Promise((resolve, reject)=>{
                 setTimeout(async ()=> { try{
-                    console.log('action', action);
                     if(typeof action === 'object'){
                         if(action.to){
                             if(!this[action.from].mesh.position){
-                                //console.log(action.to, this[action.to])
                                 throw new Error(`${action.to} has no position (does it exist in the scene?)`);
                             }
-                            console.log('A', Tile.offset[action.to].x,  Submesh.tileSize);
                             this[action.from].moveTo( this.scene, new Vector3(
                                 Tile.offset[action.to].x * Submesh.tileSize, 
                                 Tile.offset[action.to].y * Submesh.tileSize,
@@ -181,7 +174,6 @@ export class Treadmill {
                             ));
                             this[action.to] = this[action.from];
                             this[action.from] = null;
-                            console.log('B')
                         }else{ //move off
                             this[action.from].removeFrom(this.scene);
                             this[action.from] = null;
@@ -225,7 +217,8 @@ export class Treadmill {
                         to : Tile.groups[y+dir.y]?Tile.groups[y+dir.y][x]:null
                     }); 
                 });
-            })
+            });
+            this.y = this.y + dir.y;
         }else{
             if(!dir.x) throw new Error('No action for passed move');
             Tile.groups.forEach((row, y)=>{
@@ -238,7 +231,8 @@ export class Treadmill {
                         )?Tile.groups[y][x+dir.x]:null
                     }); 
                 });
-            })
+            });
+            this.x = this.x - dir.x;
         }
         const movingOff = queue.filter((item)=>item.to === null);
         const movingOffNames = movingOff.map((item)=> item.from);
@@ -246,7 +240,6 @@ export class Treadmill {
         const movingUp1Names = movingUp1.map((item)=> item.from);
         const movingUp2 = queue.filter((item)=>movingUp1Names.indexOf(item.to) !== -1);
         const unloadedNames = movingUp2.map((item)=> item.from);
-        this.y = this.y + dir.y;
         await this.setTreadmillState([movingOff, movingUp1, movingUp2, unloadedNames]);
     }
     // Getter

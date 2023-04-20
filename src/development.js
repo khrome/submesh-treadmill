@@ -1,5 +1,17 @@
 import Stats from 'stats.js';
-import { Color, Scene, AxesHelper, Raycaster, Vector2, Vector3, LineBasicMaterial, BufferGeometry, Line, ArrowHelper } from 'three';
+import { 
+    CameraHelper, 
+    Color, 
+    Scene, 
+    AxesHelper, 
+    Raycaster, 
+    Vector2, 
+    Vector3, 
+    LineBasicMaterial, 
+    BufferGeometry, 
+    Line, 
+    ArrowHelper 
+} from 'three';
 
 const kvs = {}
 
@@ -11,6 +23,8 @@ const digits = (num, places)=>{
     for(;lcv < places; lcv++) factor = factor * 10;
     return Math.floor(num*factor)/factor;
 }
+
+let arrow = null;
 
 export class DevelopmentTools{
     constructor(options={}){
@@ -33,15 +47,29 @@ export class DevelopmentTools{
         }
     }
     
-    showRay(origin, raycaster, scene){
-        scene.remove ( this.arrow );
-        this.arrow = new ArrowHelper(
+    addShadowCamera(){
+        this.cameraHelper = new CameraHelper(this.options.light.shadow.camera);
+        console.log(this.cameraHelper)
+        this.options.scene.add(this.cameraHelper)
+    }
+    
+    sceneAxes(point){
+        var axesHelper = new AxesHelper( 5 );
+        axesHelper.setColors('red', 'blue', 'green');
+        if(point) axesHelper.position.set(point);
+        this.options.scene.add( axesHelper );
+    }
+    
+    showRay(raycaster, incomingScene){
+        const scene = incomingScene || this.options.scene;
+        if(scene) scene.remove ( arrow );
+        arrow = new ArrowHelper(
             raycaster.ray.direction, 
-            this.mesh.position, 
-            100, 
+            raycaster.ray.origin, 
+            40, 
             Math.random() * 0xffffff 
         );
-        scene.add( this.arrow );
+        if(scene) scene.add( arrow );
     }
     
     activateMeshTriangleSelection(container, renderer, scene, camera, treadmill){
@@ -105,6 +133,7 @@ export class DevelopmentTools{
     }
     
     tickStop(){
+        if(this.cameraHelper) this.cameraHelper.update();
         const keys = Object.keys(this.stats);
         let lcv = 0;
         for(; lcv< keys.length; lcv++){
@@ -135,7 +164,6 @@ export class DevelopmentTools{
                 this.panes[uncasedType] = result;
                 break;
         }
-        console.log(`[${uncasedType}]>>>`, container, result);
         if(container && result){
             container.appendChild(result.dom);
             setHUDPositions(
