@@ -139,7 +139,7 @@ export class Submesh{
         // todo: marker bodies
     }
 
-    tick(){
+    tick(delta, scene, treadmill){
         if(this.mesh.position && this.body && this.body.position){
             this.body.position.copy(this.mesh.position);
             this.body.quaternion.copy(this.mesh.quaternion);
@@ -154,6 +154,7 @@ export class Submesh{
         //todo: for
         if(markers) for(; markerIndex < markers.length; markerIndex++){
             marker = markers[markerIndex];
+            if(marker.doing.length) marker.actionTick(delta, treadmill);
             x = marker.mesh.position.x;
             y = marker.mesh.position.y;
             let action = '';

@@ -73,7 +73,7 @@ scene.add(horizonPlane)
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = BasicShadowMap;
-const ambient = new AmbientLight( 0x404040 , 0.1);
+const ambient = new AmbientLight( 0x404040 , 0.3);
 scene.add(ambient);
 
 const light = new DirectionalLight('#663333', 0.5);
@@ -125,10 +125,31 @@ treadmill = new Treadmill({
     x:2, y:2
 }, scene);
 
+let running = false;
+const cameraMarker = new Marker(new Cube({ color: 'red' }));
+window.handleKey = (event)=>{ //handle iframes, yay!
+    // console.log(event)
+    switch(event.code){
+        case 'KeyW': cameraMarker.forward();
+            break;
+        case 'KeyS': cameraMarker.backward();
+            break;
+        case 'KeyA': cameraMarker.strafeRight();
+            break;
+        case 'KeyD': cameraMarker.strafeLeft();
+            break;
+        case 'KeyQ': cameraMarker.turnLeft();
+            break;
+        case 'KeyE': cameraMarker.turnRight();
+            break;
+        case 'Space': running = !running;
+            break;
+    }
+}
+
 
 treadmill.loading.then(()=>{
     // now let's set up an avatar for the camera's target, so we can move it around
-    const cameraMarker = new Marker(new Cube({ color: 'red' }));
     treadmill.addMarkerToStage(cameraMarker, 5, 5);
     controls.target = cameraMarker.mesh.position;
     cameraMarker.linked.push(camera);
@@ -139,41 +160,20 @@ treadmill.loading.then(()=>{
     console.log(light.shadow.camera);
     light.updateMatrixWorld();
     renderer.setAnimationLoop(() => {
-        //camera.target = cameraMarker.mesh;
-        //spot.position.set(cameraMarker.mesh.position.x, cameraMarker.mesh.position.y)
-        //spot.target.position.set(cameraMarker.mesh.position.x, cameraMarker.mesh.position.y)
         tools.tickStart();
         const delta = clock.getDelta();
-        treadmill.tick();
+        treadmill.tick(delta);
         if(light.tick) light.tick();
         controls.update();
         renderer.render(scene, camera);
         tools.tickStop();
     }, 100);
     
-    let running = false;
+    Marker.enableSelection(document.body, camera, renderer, treadmill, [Cube]);
     
-    window.addEventListener('keydown', (event)=>{
-        // console.log(event)
-        switch(event.code){
-            case 'KeyW': cameraMarker.forward();
-                break;
-            case 'KeyS': cameraMarker.backward();
-                break;
-            case 'KeyA': cameraMarker.strafeRight();
-                break;
-            case 'KeyD': cameraMarker.strafeLeft();
-                break;
-            case 'KeyQ': cameraMarker.turnLeft();
-                break;
-            case 'KeyE': cameraMarker.turnRight();
-                break;
-            case 'Space': running = !running;
-                break;
-        }
-    });
+    window.addEventListener('keydown', window.handleKey);
     
-    setInterval(()=>{ if(running) cameraMarker.forward() }, 10);
+    setInterval(()=>{ if(running) cameraMarker.forward(1, null, null, treadmill) }, 10);
     // tools.sceneAxes(new Vector3(0, 0, 0));
     tools.show('output', document.body);
     tools.show('mesh', document.body);

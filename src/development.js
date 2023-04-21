@@ -358,7 +358,7 @@ const activateTriangleSelection = (container, renderer, scene, loop, camera)=>{
         if(intersects && intersects[0]){
             const geometry = intersects[0]?.object?.geometry;
             if(geometry){
-                const offset = intersects[0].faceIndex * geometry.attributes.position.itemSize*3;
+                const offset = intersects[0].faceIndex * geometry.attributes.position.itemSize * 3;
                 const face = Array.prototype.slice.call(geometry.attributes.position.array, offset, offset+3*3);
                 const submeshName = scene.treadmill.positionOfMesh(intersects[0].object);
                 const submesh = scene.treadmill.submesh(submeshName);

@@ -88,7 +88,6 @@ scene.add(spot);
 
 const light = spot;
 
-//scene.add(spot);
 scene.background = new Color('#220822');
 const camera = new PerspectiveCamera(
     45, 
@@ -99,6 +98,7 @@ const camera = new PerspectiveCamera(
 window.tools = new DevelopmentTools({ scene, clock, renderer, light, camera });
 const controls = new OrbitControls( camera, renderer.domElement );
 container.append(renderer.domElement);
+
 controls.target.set( 8, 8, 0 );
 controls.minPolarAngle = Math.PI * .5; 
 controls.maxPolarAngle = Math.PI;
@@ -130,17 +130,17 @@ let running = false;
 window.handleKey = (event)=>{ //handle iframes, yay!
     // console.log(event)
     switch(event.code){
-        case 'KeyW': cameraMarker.forward();
+        case 'KeyW': cameraMarker.forward(1, null, null, treadmill);
             break;
-        case 'KeyS': cameraMarker.backward();
+        case 'KeyS': cameraMarker.backward(1, null, null, treadmill);
             break;
-        case 'KeyA': cameraMarker.strafeRight();
+        case 'KeyA': cameraMarker.strafeRight(1, null, null, treadmill);
             break;
-        case 'KeyD': cameraMarker.strafeLeft();
+        case 'KeyD': cameraMarker.strafeLeft(1, null, null, treadmill);
             break;
-        case 'KeyQ': cameraMarker.turnLeft();
+        case 'KeyQ': cameraMarker.turnLeft(1, null, null, treadmill);
             break;
-        case 'KeyE': cameraMarker.turnRight();
+        case 'KeyE': cameraMarker.turnRight(1, null, null, treadmill);
             break;
         case 'Space': running = !running;
             break;
@@ -172,7 +172,7 @@ treadmill.loading.then(()=>{
     
     window.addEventListener('keydown', window.handleKey);
     
-    setInterval(()=>{ if(running) cameraMarker.forward() }, 10);
+    setInterval(()=>{ if(running) cameraMarker.forward(1, null, null, treadmill) }, 10);
     // tools.sceneAxes(new Vector3(0, 0, 0));
     tools.show('output', document.body);
     //tools.show('mesh', document.body);

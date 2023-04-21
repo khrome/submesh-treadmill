@@ -11,6 +11,14 @@ const groundRaycaster = new Raycaster(
     0, 100 
 );
 
+const isMarkerOfTypeGenerator = (markerTypes)=>{
+    return (instance)=>{
+        return markerTypes.reduce((isA, thisType)=>{
+            return isA || instance.object instanceof thisType;
+        }, false)
+    };
+};
+
 const dir = new Vector3();
 
 const timers = {}; //a single global debounce
@@ -121,13 +129,42 @@ export class Treadmill {
     positions(){
         return Tile.list;
     }
+    
+    worldPointFor(treadmillPoint){
+        const copy = treadmillPoint.clone();
+        copy.x += this.x * Submesh.tileSize;
+        copy.y += this.y * Submesh.tileSize;
+        return copy;
+    }
+    
+    treadmillPointFor(worldPoint){
+        const copy = worldPoint.clone();
+        copy.x -= this.x * Submesh.tileSize;
+        copy.y -= this.y * Submesh.tileSize;
+        return copy;
+    }
 
     activeSubmeshes(){
-        return this.positions().map((position)=> this[position]);
+        return Tile.list.map((position)=> this[position]);
     }
 
     activeSubmeshMeshes(){
         return this.activeSubmeshes().map((submesh)=> submesh?.mesh);
+    }
+    
+    activeMarkers(types, submeshes = this.activeSubmeshes()){
+        const allMarkers = submeshes.reduce((agg, item)=>{
+            return agg.concat(item.markers);
+        }, []);
+        if(types){
+            const isSelectableMarker = isMarkerOfTypeGenerator(types);
+            return allMarkers.filter(isSelectableMarker);
+        }
+        return allMarkers;
+    }
+    
+    activeSubmeshMeshesAndMarkers(markerClasses, submeshes = this.activeSubmeshes() ){
+        return submeshes.map((submesh)=> submesh?.mesh).concat(this.activeMarkers(markerClasses));
     }
 
     tick(delta){
@@ -135,7 +172,7 @@ export class Treadmill {
         const submeshes = this.activeSubmeshes()
         let submeshIndex = 0;
         for(; submeshIndex < submeshes.length; submeshIndex++){
-            (submeshes[submeshIndex]&& submeshes[submeshIndex].tick(delta, this.scene));
+            (submeshes[submeshIndex]&& submeshes[submeshIndex].tick(delta, null, this));
         }
     }
 

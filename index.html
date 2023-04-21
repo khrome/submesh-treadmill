@@ -57,6 +57,13 @@
     </style>
   </head>
   <body>
+    <div style="position:absolute; z-index: 510; width:100%; height: 100%">
+      <select id="viz">
+        <option value="simple">Simple</option>
+        <option value="simple-physics">Collision (No Physics)</option>
+        <option value="physics">Collision (Physics)</option>
+      </select>
+    </div>
     <div style="position:absolute; z-index: 500; width:100%; height: 100%">
       <div class="screen" id="controlsKey">
         <table class="keys">
@@ -143,15 +150,30 @@
         </table>
       </div>
     </div>
-    <iframe id="simpleIframe"
+    <iframe id="simple-iframe"
         title="Simple example with manual movement"
         style="height:100vh; width:100vw"
         src="test/demo/simple.html">
+    </iframe>
+    <iframe id="simple-physics-iframe"
+        title="Simple example with manual movement"
+        style="height:100vh; width:100vw"
+        src="test/demo/simple-physics.html">
     </iframe>
     <script>
       function toggleDiv(id) {
           var div = document.getElementById(id);
           div.style.display = div.style.display == "none" ? "block" : "none";
+      }
+      function showOnlyIframe(id) {
+          var div = document.getElementById(id);
+          const list = document.getElementsByTagName('iframe');
+          let lcv=0;
+          for(; lcv < list.length; lcv++){
+            console.log('off', list[lcv])
+            list[lcv].style.display = "none";
+          }
+          if(div) div.style.display = "block"
       }
       window.addEventListener('keydown', (event)=>{
           // console.log(event)
@@ -160,8 +182,15 @@
                   break;
           }
       });
-      window.myIframe = document.getElementById("simpleIframe").contentWindow;
+      document.getElementById("viz").onchange = function(e){
+        const value = e.target[e.target.selectedIndex]?.value;
+        console.log('change', value);
+        showOnlyIframe(value+'-iframe')
+      };
+      console.log(document.getElementById("viz"))
+      window.myIframe = document.getElementById("simple-iframe").contentWindow;
       window.addEventListener("keydown", function(evt) { myIframe.handleKey(evt); });
+      //window.addEventListener("mousemove", function(evt) { myIframe.handleMouse(evt); });
     </script>
     <!--<script type="module" src="/main.js"></script>-->
   </body>
