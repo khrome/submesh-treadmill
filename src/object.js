@@ -8,6 +8,10 @@ export class MeshObject{
         throw new Error('.defineActions() must be defined in any child class of MeshObject');
     }
     
+    defaultValues(){
+        return { };
+    }
+    
     act(marker, target, options={}){
         
     }

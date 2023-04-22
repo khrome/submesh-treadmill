@@ -8,6 +8,9 @@ import {
     Vector2, 
     Vector3, 
     LineBasicMaterial, 
+    MeshBasicMaterial,
+    SphereGeometry,
+    Mesh,
     BufferGeometry, 
     Line, 
     ArrowHelper 
@@ -25,6 +28,7 @@ const digits = (num, places)=>{
 }
 
 let arrow = null;
+let point = {};
 
 export class DevelopmentTools{
     constructor(options={}){
@@ -70,6 +74,16 @@ export class DevelopmentTools{
             Math.random() * 0xffffff 
         );
         if(scene) scene.add( arrow );
+    }
+    
+    showPoint(position, name='default', color=(Math.random() * 0xffffff), incomingScene){
+        const scene = incomingScene || this.options.scene;
+        if(scene) scene.remove ( point[name] );
+        const geometry = new SphereGeometry( 0.5, 8, 8 );
+        const material = new MeshBasicMaterial( { color: color } );
+        point[name] = new Mesh( geometry, material );
+        point[name].position.copy(position);
+        if(scene) scene.add( point[name] );
     }
     
     activateMeshTriangleSelection(container, renderer, scene, camera, treadmill){

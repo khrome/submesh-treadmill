@@ -269,7 +269,7 @@ export class Treadmill {
                     }); 
                 });
             });
-            this.x = this.x - dir.x;
+            this.x = this.x + dir.x;
         }
         const movingOff = queue.filter((item)=>item.to === null);
         const movingOffNames = movingOff.map((item)=> item.from);

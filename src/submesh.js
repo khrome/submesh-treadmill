@@ -158,10 +158,10 @@ export class Submesh{
             x = marker.mesh.position.x;
             y = marker.mesh.position.y;
             let action = '';
-            if((x - xOffset) < 0) action += 'east';
-            if((x - xOffset) > this.size) action += 'west';
             if((y - yOffset) < 0) action += 'south';
             if((y - yOffset) > this.size) action += 'north';
+            if((x - xOffset) < 0) action += 'east';
+            if((x - xOffset) > this.size) action += 'west';
             if(action){
                 let index = this.markers.indexOf(marker);
                 if(index !== -1){

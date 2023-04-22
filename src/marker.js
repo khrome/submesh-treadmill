@@ -14,10 +14,10 @@ const bbox = (ob)=>{
 }
 
 const direction = {
-    forward: new Vector3(0, 1, 0),
-    backward: new Vector3(0, -1, 0),
-    left: new Vector3(1, 0, 0),
-    right: new Vector3(-1, 0, 0)
+    right: new Vector3(0, 1, 0),
+    left: new Vector3(0, -1, 0),
+    forward: new Vector3(0, 0, 1), //TBD: ??
+    backward: new Vector3(0, 0, -1)
 };
 
 const firstNodeWithGeometryInTree = (node)=>{
@@ -50,7 +50,7 @@ export class Marker {
         }
         this.random = options.random || Math.random;
         this.active = true; //todo: only if npc
-        this.values = {};
+        this.values = this.object.defaultValues();
         this.doing = [];
         this.allInfo = ()=>{
             return Object.assign({}, this.object.options, this.options, this.values);
@@ -101,18 +101,21 @@ export class Marker {
             //origin = new Vector3();
             //this.mesh.getWorldPosition(origin);
         }
-        const worldOrigin = treadmill.worldPointFor(origin);
-        const movementSpeed = 0.2;
+        const localTarget = treadmill.treadmillPointFor(target);
+        const movementSpeed = this.values.movementSpeed || 1;
         const maxDistance = movementSpeed * delta;
         directionVector.applyQuaternion(this.mesh.quaternion);
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
-        
-        // if(tools) tools.showRay(raycaster);
-        //console.log(target, worldOrigin, target && worldOrigin.distanceTo(target))
-        if(target && origin && worldOrigin.distanceTo(target) < maxDistance){
+        if(false && window.tools){
+            window.tools.showRay(raycaster);
+            console.log('showing points');
+            window.tools.showPoint(origin, 'local', 'red');
+            window.tools.showPoint(directionVector, 'world', 'blue');
+        }
+        if(target && origin && origin.distanceTo(localTarget) < maxDistance){
             //todo: compute remaining time
-            this.mesh.position.copy(target);
+            this.mesh.position.copy(localTarget);
             return 0;
         }else{
             raycaster.ray.at(maxDistance, result);
@@ -124,7 +127,8 @@ export class Marker {
     
     // all movement functions either proceed to the target or their movement max, whichever comes first
     // and return the remaining delta when complete.
-    forward(delta=1, target, options, treadmill){ // +y
+    
+    forward(delta=1, target, options, treadmill){ // +x
         return this.moveInOrientation(direction.forward.clone(), delta, target, treadmill);
     }
     
@@ -141,12 +145,12 @@ export class Marker {
     }
     
     turnRight(delta=1, target, options, treadmill){
-        const turnSpeed = 0.1;
+        const turnSpeed = this.values.turnSpeed || 0.1;
         this.mesh.rotation.z -= turnSpeed * delta;
     }
     
     turnLeft(delta=1, target, options, treadmill){
-        const turnSpeed = 0.1;
+        const turnSpeed = this.values.turnSpeed || 0.1;
         this.mesh.rotation.z += turnSpeed * delta;
     }
 
@@ -370,7 +374,10 @@ export class Marker {
                     selected.forEach((marker)=>{
                         const markerPoint = marker.mesh.position;
                         const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
-                        console.log('clickpoint', point, worldPoint, point.distanceTo(markerPoint), worldPoint.distanceTo(markerWorldPoint));
+                        if(false && window.tools){
+                            window.tools.showPoint(point, 'local', 'red');
+                            window.tools.showPoint(worldPoint, 'world', 'blue');
+                        }
                         marker.action('moveTo', worldPoint, {}, treadmill);
                     });
                 }
