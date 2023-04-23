@@ -30,13 +30,9 @@ import { SimpleSubmesh } from './submesh';
 
 let treadmill;
 
-const createSubmesh = (x, y)=>{
-    const geometry = new PlaneGeometry( 
-        SimpleSubmesh.tileSize, 
-        SimpleSubmesh.tileSize,
-        SimpleSubmesh.tileSize, 
-        SimpleSubmesh.tileSize
-    );
+/*const createSubmesh = (x, y)=>{
+    const size = SimpleSubmesh.tileSize;
+    const geometry = new PlaneGeometry( size, size, size, size );
     geometry.translate( 8, 8, 0 ); //reorient to origin @ ll corner
     const debouncedMove = treadmill.blocked(()=>{
         console.log(marker, submesh, action);
@@ -44,17 +40,18 @@ const createSubmesh = (x, y)=>{
     const submesh = new SimpleSubmesh(geometry, new Vector2(x, y), {
         onMarkerExit : (marker, submesh, action)=>{
             const newSubmesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
-            if(newSubmesh){
-                newSubmesh.markers.push(marker);
+            if(newSubmesh){ newSubmesh.markers.push(marker);
             }else{
                 scene.remove(marker.mesh);
                 // todo: handle body
             }
-            debouncedMove(action); //needed?
+            if(marker.linked && marker.linked[0] ===)
+            treadmill.moveDirection(action)
+            //debouncedMove(action); //needed?
         }
     });
     return submesh;
-};
+};*/
 
 const container = document.querySelector(".game-world");
 
@@ -121,7 +118,29 @@ window.addEventListener('resize', () => {
 });
 
 treadmill = new Treadmill({
-    createSubmesh,
+    createSubmesh: (x, y)=>{
+        const size = SimpleSubmesh.tileSize;
+        const geometry = new PlaneGeometry( size, size, size, size );
+        geometry.translate( 8, 8, 0 ); //reorient to origin @ ll corner
+        const debouncedMove = treadmill.blocked(()=>{
+            console.log(marker, submesh, action);
+        })
+        const submesh = new SimpleSubmesh(geometry, new Vector2(x, y), {
+            onMarkerExit : (marker, submesh, action)=>{
+                const newSubmesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
+                if(newSubmesh){ newSubmesh.markers.push(marker);
+                }else{
+                    scene.remove(marker.mesh);
+                    // todo: handle body
+                }
+                if(marker.linked && marker.linked[0] === camera){
+                    treadmill.moveDirection(action)
+                };
+                //debouncedMove(action); //needed?
+            }
+        });
+        return submesh;
+    },
     x:2, y:2
 }, scene);
 

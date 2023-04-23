@@ -114,17 +114,16 @@ export class Marker {
         //directionVector.rotation.z = this.mesh.rotation.z;
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
-        if(false && window.tools){
-            window.tools.showRay(raycaster);
-            console.log('showing points');
-            window.tools.showPoint(origin, 'local', 'red');
-            window.tools.showPoint(directionVector, 'world', 'blue');
+        let localTarget = target && treadmill.treadmillPointFor(target);
+        console.log('[OUT]>', localTarget, target, [treadmill.x, treadmill.y]);
+        if(window.tools) {
+            if(localTarget) window.tools.showPoint(localTarget, 'target', '#0000FF');
+            if(target) window.tools.showPoint(target, 'target', '#000099');
         }
-        let localTarget = null;
         if(
             target &&
              origin && 
-             (localTarget = treadmill.treadmillPointFor(target)) && 
+             localTarget && 
              origin.distanceTo(localTarget) < maxDistance
          ){
             //todo: compute remaining time
@@ -170,7 +169,11 @@ export class Marker {
             if (targetAngle > twoPI) { targetAngle -= twoPI; }
             const delta = this.mesh.rotation.z - targetAngle;
             const motion = direction * maxRotation;
-            console.log('[OUT]>', localTarget, target, [treadmill.x, treadmill.y]);
+            if(false && window.tools) {
+                window.tools.showRay(raycaster);
+                window.tools.showPoint(localTarget, 'target', '#0000FF');
+                window.tools.showPoint(target, 'target', '#000099');
+            }
             if(delta > maxRotation){
                 const newValue = this.mesh.rotation.z + motion;
                 if(newValue < 0){
@@ -183,10 +186,6 @@ export class Marker {
                 this.mesh.rotation.z = targetAngle;
                 //TBD compute remaining time
                 return 0;
-            }
-            if(false && window.tools) {
-                window.tools.showRay(raycaster);
-                window.tools.showPoint(localTarget, 'target', 'green');
             }
             return 0;
         }else{
@@ -439,9 +438,9 @@ export class Marker {
                         const markerPoint = marker.mesh.position;
                         const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
                         console.log('[IN]>', markerPoint, markerWorldPoint, [treadmill.x, treadmill.y]);
-                        if(false && window.tools){
-                            window.tools.showPoint(point, 'local', 'red');
-                            window.tools.showPoint(worldPoint, 'world', 'blue');
+                        if(window.tools){
+                            window.tools.showPoint(point, 'local', '#FF0000');
+                            window.tools.showPoint(worldPoint, 'world', '#990000');
                         }
                         if(!meta.shift){
                             marker.doing = [];
