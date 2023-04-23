@@ -198,7 +198,8 @@ export class Treadmill {
         let asyncContext = null;
         workGroups.forEach((workList)=>{
             const thisContext = Promise.all(workList.map((action)=> new Promise((resolve, reject)=>{
-                setTimeout(async ()=> { try{
+                setTimeout(async ()=> { 
+                    //try{
                     if(typeof action === 'object'){
                         if(action.to){
                             if(!this[action.from].mesh.position){
@@ -234,7 +235,8 @@ export class Treadmill {
                         if(this && action) this[action] = submesh;
                     }
                     resolve(); 
-                }catch(ex) { reject(ex) } });
+                //}catch(ex) { reject(ex) } 
+            });
             })))
             if(!asyncContext) asyncContext = thisContext;
             else asyncContext = asyncContext.then(thisContext);

@@ -130,17 +130,17 @@ const cameraMarker = new Marker(new Cube({ color: 'red' }));
 window.handleKey = (event)=>{ //handle iframes, yay!
     // console.log(event)
     switch(event.code){
-        case 'KeyW': cameraMarker.forward();
+        case 'KeyW': cameraMarker.forward(1, null, null, treadmill);
             break;
-        case 'KeyS': cameraMarker.backward();
+        case 'KeyS': cameraMarker.backward(1, null, null, treadmill);
             break;
-        case 'KeyA': cameraMarker.strafeRight();
+        case 'KeyA': cameraMarker.strafeRight(1, null, null, treadmill);
             break;
-        case 'KeyD': cameraMarker.strafeLeft();
+        case 'KeyD': cameraMarker.strafeLeft(1, null, null, treadmill);
             break;
-        case 'KeyQ': cameraMarker.turnLeft();
+        case 'KeyQ': cameraMarker.turnLeft(1, null, null, treadmill);
             break;
-        case 'KeyE': cameraMarker.turnRight();
+        case 'KeyE': cameraMarker.turnRight(1, null, null, treadmill);
             break;
         case 'Space': running = !running;
             break;

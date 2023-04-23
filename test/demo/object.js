@@ -11,8 +11,10 @@ import {
     DirectionalLightHelper,
     DirectionalLight,
     SphereGeometry,
+    CylinderGeometry,
     PlaneGeometry,
     AmbientLight,
+    Matrix4,
     SpotLight,
     Scene,
     Color,
@@ -24,20 +26,6 @@ import {
     PerspectiveCamera
 } from "three";
 
-const GetAngle = (A, B)=>{
-    // |A·B| = |A| |B| COS(θ)
-    // |A×B| = |A| |B| SIN(θ)
-
-    return Math.atan2(Cross(A,B), Dot(A,B));
-}
-
-const Dot = (A, B)=>{
-    return A.X*B.X+A.Y*B.Y;
-}
-const Cross = (A, B)=>{
-    return A.X*B.Y-A.Y*B.X;
-}
-
 export class Cube extends MeshObject{
     constructor(options={}){
         super(options);
@@ -45,30 +33,26 @@ export class Cube extends MeshObject{
         this.color = options.color || Math.random() * 0xffffff ;
     }
     
+    defaultValues(){
+        return {
+            "movementSpeed" : 1,
+            "turnSpeed" : 0.1,
+            "health" : 10
+        }
+    }
+    
     defineActions(){
         return {
             priority: ['moveTo', 'attack'],
             moveTo: (delta, marker, target, options={}, treadmill) => { //meta
                 //todo: test "crow flies" obstruction, if obstructed: path find
+                //window.tools.showPoint(target, 'target');
                 marker.action('turn', target, options, treadmill);
                 marker.action('forward', target, options, treadmill);
                 return delta; 
             },
             turn: (delta, marker, target, options={}, treadmill) => {
-                //todo: animate
-                const raycaster = marker.lookAt(target);
-                //marker.mesh.rotation.z = raycaster.ray.rotation.z;
-                const xDist = target.x - marker.mesh.position.x;
-                const yDist = target.y - marker.mesh.position.y;
-                //const angle = Math.atan2(yDist, xDist);
-                //let angle =  Math.atan2(target.y, target.x) -  Math.atan2(marker.mesh.position.y, marker.mesh.position.x);
-                //if (angle < 0) { angle += 2 * M_PI; }
-                const angle = GetAngle(marker.mesh.position, target);
-                //marker.mesh.rotation.z  = angle;
-                if(window.tools) window.tools.showRay(raycaster);
-                console.log('look', target)
-                //marker.mesh.lookAt(target);
-                return 0;
+                return marker.turnRight(delta, target, options, treadmill);
             },
             turnLeft: (delta, marker, target, options={}, treadmill) => {
                 return marker.turnLeft(delta, target, options, treadmill);
@@ -88,23 +72,34 @@ export class Cube extends MeshObject{
             backward: (delta, marker, target, options={}, treadmill) => {
                 return marker.backward(delta, target, options, treadmill);
             },
-            attack: (delta, marker, target, options={}) => {
+            interact: (delta, marker, target, options={}) => {
                 console.log('attack', target);
             }
         };
     }
     
     buildObject(){
-        const geometry = new BoxGeometry(this.size,this.size,this.size);
+        //const geometry = new BoxGeometry(this.size,this.size,this.size);
+        const height = this.options.height || 2;
+        const geometry = new CylinderGeometry( this.size, this.size, height, 8 );
+        geometry.applyMatrix4( new Matrix4().makeRotationX( Math.PI / 2 ) );
+        geometry.applyMatrix4( new Matrix4().makeTranslation( 0,  0, height/2) );
         const material = new MeshPhongMaterial({
             color: this.color,    // red (can also use a CSS color string here)
             flatShading: false,
         });
         const mesh = new Mesh( geometry, material );
         mesh.castShadow = true;
-        mesh.position.z = this.size/2;
         const object = new Group();
         object.add(mesh);
+        if(window.tools){
+            console.log('added axes');
+            const offset = mesh.position.clone();
+            offset.x -= .002;
+            offset.y -= .002;
+            offset.z -= .002;
+            object.add(window.tools.axes(offset));
+        }
         return object;
     }
 }

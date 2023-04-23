@@ -64,6 +64,13 @@ export class DevelopmentTools{
         this.options.scene.add( axesHelper );
     }
     
+    axes(point){
+        var axesHelper = new AxesHelper( 5 );
+        axesHelper.setColors('red', 'blue', 'green');
+        if(point) axesHelper.position.set(point);
+        return axesHelper;
+    }
+    
     showRay(raycaster, incomingScene){
         const scene = incomingScene || this.options.scene;
         if(scene) scene.remove ( arrow );

@@ -1,4 +1,4 @@
-import { Raycaster, Vector3, Vector2, ArrowHelper } from "three";
+import { Raycaster, Vector3, Vector2, ArrowHelper, Quaternion } from "three";
 import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
 import { Emitter } from 'extended-emitter/browser-es6';
 import { DevelopmentTools } from './development'
@@ -13,11 +13,13 @@ const bbox = (ob)=>{
     throw new Error('No extractable boundingBox');
 }
 
+const twoPI = Math.PI * 2;
+
 const direction = {
     right: new Vector3(0, 1, 0),
     left: new Vector3(0, -1, 0),
-    forward: new Vector3(0, 0, 1), //TBD: ??
-    backward: new Vector3(0, 0, -1)
+    forward: new Vector3(1, 0, 0), //TBD: ??
+    backward: new Vector3(-1, 0, 0)
 };
 
 const firstNodeWithGeometryInTree = (node)=>{
@@ -32,6 +34,8 @@ let raycaster = new Raycaster();
 let result = new Vector3();
 
 export class Marker {
+    static CLOCKWISE = -1;
+    static WIDDERSHINS = 1;
     constructor(object, options={}) {
         this.object = object;
         this.mesh = this.object.buildObject(options.random);
@@ -101,10 +105,13 @@ export class Marker {
             //origin = new Vector3();
             //this.mesh.getWorldPosition(origin);
         }
-        const localTarget = treadmill.treadmillPointFor(target);
         const movementSpeed = this.values.movementSpeed || 1;
         const maxDistance = movementSpeed * delta;
+        const quaternion = new Quaternion();
+        //quaternion.z = this.mesh.quaternion.z
+        //directionVector.applyQuaternion(quaternion);
         directionVector.applyQuaternion(this.mesh.quaternion);
+        //directionVector.rotation.z = this.mesh.rotation.z;
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
         if(false && window.tools){
@@ -113,7 +120,13 @@ export class Marker {
             window.tools.showPoint(origin, 'local', 'red');
             window.tools.showPoint(directionVector, 'world', 'blue');
         }
-        if(target && origin && origin.distanceTo(localTarget) < maxDistance){
+        let localTarget = null;
+        if(
+            target &&
+             origin && 
+             (localTarget = treadmill.treadmillPointFor(target)) && 
+             origin.distanceTo(localTarget) < maxDistance
+         ){
             //todo: compute remaining time
             this.mesh.position.copy(localTarget);
             return 0;
@@ -144,14 +157,50 @@ export class Marker {
         return this.moveInOrientation(direction.left.clone(), delta, target, treadmill);
     }
     
-    turnRight(delta=1, target, options, treadmill){
+    turn(delta=1, direction, target, options, treadmill){
         const turnSpeed = this.values.turnSpeed || 0.1;
-        this.mesh.rotation.z -= turnSpeed * delta;
+        const maxRotation = turnSpeed * delta;
+        if(target){
+            const localTarget = treadmill.treadmillPointFor(target);
+            const raycaster = this.lookAt(localTarget);
+            const xDist = localTarget.x - this.mesh.position.x;
+            const yDist = localTarget.y - this.mesh.position.y;
+            let targetAngle = Math.atan2(yDist, xDist);
+            if (targetAngle < 0) { targetAngle += twoPI; }
+            if (targetAngle > twoPI) { targetAngle -= twoPI; }
+            const delta = this.mesh.rotation.z - targetAngle;
+            const motion = direction * maxRotation;
+            console.log('[OUT]>', localTarget, target, [treadmill.x, treadmill.y]);
+            if(delta > maxRotation){
+                const newValue = this.mesh.rotation.z + motion;
+                if(newValue < 0){
+                    this.mesh.rotation.z = (this.mesh.rotation.z + motion) + twoPI;
+                }else{
+                    this.mesh.rotation.z = (this.mesh.rotation.z + motion) % twoPI;
+                }
+                return -1;
+            }else{
+                this.mesh.rotation.z = targetAngle;
+                //TBD compute remaining time
+                return 0;
+            }
+            if(false && window.tools) {
+                window.tools.showRay(raycaster);
+                window.tools.showPoint(localTarget, 'target', 'green');
+            }
+            return 0;
+        }else{
+            this.mesh.rotation.z += direction * maxRotation;
+            return 0;
+        }
+    }
+    
+    turnRight(delta=1, target, options, treadmill){
+        return this.turn(delta=1, Marker.CLOCKWISE, target, options, treadmill);
     }
     
     turnLeft(delta=1, target, options, treadmill){
-        const turnSpeed = this.values.turnSpeed || 0.1;
-        this.mesh.rotation.z += turnSpeed * delta;
+        return this.turn(delta=1, Marker.WIDDERSHINS, target, options, treadmill);
     }
 
     moveTo(point){
@@ -347,12 +396,27 @@ export class Marker {
             console.log(intersects);
         });*/
         let selected = [];
+        const metalist = ['Shift', 'Control', 'Alt', 'Meta'];
+        const meta = {};
+        container.addEventListener('keydown', (event)=>{
+            const metaIndex = metalist.indexOf(event.code.replace('Left', '').replace('Right', ''));
+            if(metaIndex !== -1){
+                meta[metalist[metaIndex].toLowerCase()] = true;
+            }
+        });
+        container.addEventListener('keyup', (event)=>{
+            const metaIndex = metalist.indexOf(event.code.replace('Left', '').replace('Right', ''));
+            if(metaIndex !== -1){
+                meta[metalist[metaIndex].toLowerCase()] = false;
+            }
+        });
         container.addEventListener('click', (event)=>{
             var raycaster = new Raycaster(); // create once
             var mouse = new Vector2(); // create once
         
             mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
             mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+            console.log(meta);
             
             raycaster.setFromCamera( mouse, camera );
             const submeshes = treadmill.activeSubmeshes();
@@ -374,9 +438,13 @@ export class Marker {
                     selected.forEach((marker)=>{
                         const markerPoint = marker.mesh.position;
                         const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
+                        console.log('[IN]>', markerPoint, markerWorldPoint, [treadmill.x, treadmill.y]);
                         if(false && window.tools){
                             window.tools.showPoint(point, 'local', 'red');
                             window.tools.showPoint(worldPoint, 'world', 'blue');
+                        }
+                        if(!meta.shift){
+                            marker.doing = [];
                         }
                         marker.action('moveTo', worldPoint, {}, treadmill);
                     });
