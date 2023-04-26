@@ -1,7 +1,8 @@
 import { Raycaster, Vector3, Vector2, ArrowHelper, Quaternion } from "three";
-import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
-import { Emitter } from 'extended-emitter/browser-es6';
-import { DevelopmentTools } from './development'
+// import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
+//import { Emitter } from 'extended-emitter-es6';
+//const Emitter = exem.Emitter;
+import { DevelopmentTools } from './development.js'
 
 const bbox = (ob)=>{
     if(ob.geometry && ob.geometry.boundingBox) return ob.boundingBox;
@@ -30,6 +31,14 @@ const firstNodeWithGeometryInTree = (node)=>{
     return currentNode;
 };
 
+const dispCoord = (value)=>{
+   return Math.floor(value * 100) / 100;
+};
+
+const dispCoords = (vector)=>{
+   return [dispCoord(vector.x), dispCoord(vector.y)];
+};
+
 let raycaster = new Raycaster();
 let result = new Vector3();
 
@@ -47,7 +56,7 @@ export class Marker {
         }
         this.options = options;
         if(this.options.shadow && this.options.shadow === 'mesh'){
-            this.shadowMesh = new ShadowMesh(this.mesh);
+            // this.shadowMesh = new ShadowMesh(this.mesh);
         }
         if(this.options.shadow && this.options.shadow === 'light'){
             this.mesh.castShadow = true;
@@ -59,7 +68,7 @@ export class Marker {
         this.allInfo = ()=>{
             return Object.assign({}, this.object.options, this.options, this.values);
         }
-        (new Emitter()).onto(this);
+        // (new Emitter()).onto(this);
         this.linked = [];
         //this.naturalX = this.random() * 16;
         //this.naturalY = this.random() * 16;
@@ -86,7 +95,7 @@ export class Marker {
         } */
     }
 
-    static emitter = new Emitter(); //common channel for all markers
+    //static emitter = new Emitter(); //common channel for all markers
 
     /*move(relativePoint, scene){
         this.moveTo(new Vector3(
@@ -115,7 +124,7 @@ export class Marker {
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
         let localTarget = target && treadmill.treadmillPointFor(target);
-        console.log('[OUT]>', localTarget, target, [treadmill.x, treadmill.y]);
+        // console.log('[OUT]>', localTarget, target, [treadmill.x, treadmill.y]);
         if(window.tools) {
             if(localTarget) window.tools.showPoint(localTarget, 'target', '#0000FF');
             if(target) window.tools.showPoint(target, 'target', '#000099');
@@ -133,7 +142,6 @@ export class Marker {
             raycaster.ray.at(maxDistance, result);
             this.moveTo(new Vector2(result.x, result.y));
             return -1;
-            //this.mesh.position.set(result.x, result.y);
         }
     }
     
@@ -327,10 +335,13 @@ export class Marker {
             //todo: convert index to action
         }
         let target = targ;
-        if(target instanceof Vector3){
+        /*if(target instanceof Vector3){
+            const oldV = target;
             target = treadmill.worldPointFor(target)
-        }
+            console.log('WorldVector', target, oldV, [treadmill.x, treadmill.y])
+        }*/
         const definition = { action, options, target };
+        console.log('DEF', definition)
         
         console.log(definition, this.doing)
         this.doing.push(definition);
@@ -341,7 +352,12 @@ export class Marker {
         const action = this.doing[0];
         if(!this.object.actions[action.action]) throw new Error(`Unsupported Action: ${action.name}`);
         const localTarget = treadmill.treadmillPointFor(action.target);
-        //console.log('convert to local', localTarget, action.target);
+        const worldPosition = treadmill.worldPointFor(this.mesh.position);
+        console.log('??', dispCoords(worldPosition), worldPosition.distanceTo(action.target), dispCoords(action.target), [treadmill.x, treadmill.y]);
+        if(window.tools){
+            window.tools.showPoint(localTarget, 'local-tick', '#00FF00');
+            window.tools.showPoint(action.target, 'world-tick', '#009900');
+        }
         const remainder = this.object.actions[action.action](delta, this, localTarget, action.options, treadmill);
         if(remainder !== -1) this.doing.shift();
     }
@@ -364,36 +380,6 @@ export class Marker {
     }
     
     static enableSelection(container, camera, renderer, treadmill, markerTypes=[]){
-        /*container.addEventListener('mousemove', (event)=>{
-            var raycaster = new Raycaster(); // create once
-            var mouse = new Vector2(); // create once
-        
-            mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
-            mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
-            
-            const isSelectableType = (instance)=>{
-                return markerTypes.reduce((isA, thisType)=>{
-                    return isA || instance instanceof thisType;
-                }, false)
-            };
-        
-            raycaster.setFromCamera( mouse, camera );
-            var intersects = null;
-            try{ //can't do this mid-load
-                //todo: optionally support markers, filtered by type
-                intersects = raycaster.intersectObjects( treadmill.activeSubmeshMeshes(), true );
-            }catch(ex){}
-            if(intersects && intersects[0]){
-                const geometry = intersects[0]?.object?.geometry;
-                if(geometry){
-                    const offset = intersects[0].faceIndex * geometry.attributes.position.itemSize * 3;
-                    const face = Array.prototype.slice.call(geometry.attributes.position.array, offset, offset+3*3);
-                    const submeshName = treadmill.positionOfMesh(intersects[0].object);
-                    const submesh = treadmill.submesh(submeshName);
-                }
-            }
-            console.log(intersects);
-        });*/
         let selected = [];
         const metalist = ['Shift', 'Control', 'Alt', 'Meta'];
         const meta = {};

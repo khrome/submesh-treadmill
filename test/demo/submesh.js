@@ -1,5 +1,5 @@
 // Sample usage for vite
-import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill';
+import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill.js';
 import {
     BoxGeometry,
     Mesh,
@@ -22,7 +22,7 @@ import {
     Vector3,
     PerspectiveCamera
 } from "three";
-import { Cube } from './object';
+import { Cube } from './object.js';
 
 // each submesh has squares on it representing it's coordinates
 export class SimpleSubmesh extends Submesh{

@@ -1,6 +1,6 @@
 // Sample usage for vite
-import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill';
-import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
+import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill.js';
+//import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
 import {
     BoxGeometry,
     Mesh,

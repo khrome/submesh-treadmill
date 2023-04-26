@@ -1,5 +1,5 @@
 import { MeshPhongMaterial, DoubleSide, Vector3, Raycaster, Vector2, Mesh } from "three";
-import { Random } from "./random";
+// import { Random } from "./random";
 
 const genericWarning = 'Submesh is a generic class and cannot be instantiated directly';
 
@@ -20,7 +20,7 @@ export class Submesh{
         this.x = tilePosition.x;
         this.y = tilePosition.y;
         this.options = options;
-        this.size = Submesh.tileSize; 
+        this.size = Submesh.tileSize;
         this.mesh = this.createMesh(geometry, tilePosition);
         this.body = this.createPhysicalMesh(this.mesh);
         this.markers = this.createMarkers() || [];
@@ -34,6 +34,11 @@ export class Submesh{
         const mesh = new Mesh( geometry, material );
         mesh.receiveShadow = true;
         return mesh;
+    }
+    
+    center(){
+        const center = new Vector2(this.size/2, this.size/2);
+        return center;
     }
 
     createPhysicalMesh(geometry){
@@ -166,7 +171,6 @@ export class Submesh{
                 let index = this.markers.indexOf(marker);
                 if(index !== -1){
                     this.markers.splice(index, 1);
-                    console.log('!', index, this.markers.indexOf(marker));
                     if(this.options.onMarkerExit) this.options.onMarkerExit(marker, this, action);
                 };
             }

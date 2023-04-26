@@ -1,4 +1,4 @@
-import Stats from 'stats.js';
+import * as Stats from 'stats.js';
 import { 
     CameraHelper, 
     Color, 
