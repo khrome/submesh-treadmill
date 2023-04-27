@@ -4,14 +4,17 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 export const create = (options={})=>{
+    let ratio = options.aspectRatio;
+    if(Number.isNaN(ratio)) ratio = 16/9;
     if(options.type === 'perspective' || options.type === 'orbital' || !options.type){
         const camera = new PerspectiveCamera(
             45, 
-            options.aspectRatio, 
+            ratio, 
             1, 
             10000
         );
         const results = {camera};
+        console.log('R', results);
         if(options.type === 'orbital'){
             const controls = new OrbitControls( camera, options.dom );
             controls.target.set( 8, 8, 0 );

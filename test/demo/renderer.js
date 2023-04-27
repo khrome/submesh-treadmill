@@ -4,13 +4,18 @@ import {
 } from "three";
 
 export const create = (options={})=>{
-    if(options.dummy){
+    let currentLoop = null
+    if(options.headless){
         return {
             setAnimationLoop : (loopHandler, interval=100)=>{
-                setInterval(loopHandler, interval)
+                if(currentLoop) clearInterval(currentLoop);
+                if(loopHandler) currentLoop = setInterval(loopHandler, interval);
             },
-            render : ()=>{
-                
+            render : ()=>{ },
+            setPixelRatio : ()=>{ },
+            setSize : ()=>{ },
+            domElement: {
+                remove: ()=>{}
             }
         }
     }
