@@ -1,4 +1,4 @@
-import * as Stats from 'stats.js';
+import Stats from 'stats.js';
 import { 
     CameraHelper, 
     Color, 
@@ -15,6 +15,9 @@ import {
     Line, 
     ArrowHelper 
 } from 'three';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+//import * as dat from 'dat.gui';
+import SpriteText from 'three-spritetext';
 
 const kvs = {}
 
@@ -27,8 +30,10 @@ const digits = (num, places)=>{
     return Math.floor(num*factor)/factor;
 }
 
-let arrow = null;
+let arrow = {};
 let point = {};
+let fonts = {};
+let textLabels = {};
 
 export class DevelopmentTools{
     constructor(options={}){
@@ -53,7 +58,6 @@ export class DevelopmentTools{
     
     addShadowCamera(){
         this.cameraHelper = new CameraHelper(this.options.light.shadow.camera);
-        console.log(this.cameraHelper)
         this.options.scene.add(this.cameraHelper)
     }
     
@@ -71,16 +75,16 @@ export class DevelopmentTools{
         return axesHelper;
     }
     
-    showRay(raycaster, incomingScene){
+    showRay(raycaster, name='default', color=(Math.random() * 0xffffff), incomingScene){
         const scene = incomingScene || this.options.scene;
-        if(scene) scene.remove ( arrow );
-        arrow = new ArrowHelper(
+        if(scene) scene.remove ( arrow[name] );
+        arrow[name] = new ArrowHelper(
             raycaster.ray.direction, 
             raycaster.ray.origin, 
             40, 
-            Math.random() * 0xffffff 
+            color 
         );
-        if(scene) scene.add( arrow );
+        if(scene) scene.add( arrow[name] );
     }
     
     showPoint(position, name='default', color=(Math.random() * 0xffffff), incomingScene){
@@ -91,6 +95,7 @@ export class DevelopmentTools{
         point[name] = new Mesh( geometry, material );
         point[name].position.copy(position);
         if(scene) scene.add( point[name] );
+        this.showTextLabel(name, position, name+'text', color, null, scene);
     }
     
     activateMeshTriangleSelection(container, renderer, scene, camera, treadmill){
@@ -153,6 +158,42 @@ export class DevelopmentTools{
         }
     }
     
+    registerFont(name, definition){
+        return new Promise((resolve, reject)=>{
+            try{
+                const loader = new FontLoader();
+                loader.load( 'fonts/helvetiker_regular.typeface.json', ( font )=>{
+                    fonts[name] = font;
+                    resolve(font);
+                });
+            }catch(ex){  reject(ex) }
+        });
+    }
+    
+    showTextLabel(text, position, name='default', color=(Math.random() * 0xffffff), fontName, incomingScene){
+        const scene = incomingScene || this.options.scene;
+        if(!fontName){
+            if(textLabels[name]) scene.remove(textLabels[name]);
+            textLabels[name] = new SpriteText(text, 2);
+            scene.add(textLabels[name]);
+            textLabels[name].position.copy(position)
+        }else{
+            if(fonts[fontName]){
+                const geometry = new TextGeometry(text , {
+                    font: fonts[fontName],
+                    size: 80,
+                    height: 5,
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 10,
+                    bevelSize: 8,
+                    bevelOffset: 0,
+                    bevelSegments: 5
+                } );
+            }
+        }
+    }
+    
     tickStop(){
         if(this.cameraHelper) this.cameraHelper.update();
         const keys = Object.keys(this.stats);
@@ -190,6 +231,8 @@ export class DevelopmentTools{
             setHUDPositions(
                 Object.keys(this.stats).map((key)=>this.stats[key]),
                 Object.keys(this.panes).map((key)=>this.panes[key]),
+                this.options.position?.vertical,
+                this.options.position?.horizontal
             );
         }
         

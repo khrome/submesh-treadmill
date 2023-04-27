@@ -44,7 +44,6 @@ export class Treadmill {
         };
         setSize();
         window.addEventListener('resize', () => {
-            console.log('!!')
             setSize();
             renderer.render(this.scene, camera);
         });
@@ -158,8 +157,8 @@ export class Treadmill {
     
     treadmillPointFor(worldPoint){
         const copy = worldPoint.clone();
-        copy.x -= this.x * Submesh.tileSize;
-        copy.y -= this.y * Submesh.tileSize;
+        copy.x = copy.x - this.x * Submesh.tileSize;
+        copy.y = copy.y - this.y * Submesh.tileSize;
         return copy;
     }
 

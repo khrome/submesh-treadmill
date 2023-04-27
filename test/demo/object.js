@@ -47,8 +47,8 @@ export class Cube extends MeshObject{
             moveTo: (delta, marker, target, options={}, treadmill) => { //meta
                 //todo: test "crow flies" obstruction, if obstructed: path find
                 //window.tools.showPoint(target, 'target');
-                marker.action('turn', target, options, treadmill);
-                marker.action('forward', target, options, treadmill);
+                marker.action('turn', treadmill.worldPointFor(target), options, treadmill);
+                marker.action('forward', treadmill.worldPointFor(target), options, treadmill);
                 return delta; 
             },
             turn: (delta, marker, target, options={}, treadmill) => {
@@ -92,7 +92,7 @@ export class Cube extends MeshObject{
         mesh.castShadow = true;
         const object = new Group();
         object.add(mesh);
-        if(window.tools){
+        if(window.tools){ //TODO: make these work
             console.log('added axes');
             const offset = mesh.position.clone();
             offset.x -= .002;

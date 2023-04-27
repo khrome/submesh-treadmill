@@ -35,7 +35,7 @@ export const create = (options={})=>{
                 light.shadow.mapSize.width = 2048; // default
                 light.shadow.mapSize.height = 2048; // default
                 light.shadow.camera.near = 2; // default
-                light.shadow.camera.far = 30;
+                light.shadow.camera.far = 40;
                 light.shadow.camera.zoom = 0.25;
             }
             results.directional = light;

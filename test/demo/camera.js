@@ -13,14 +13,14 @@ export const create = (options={})=>{
             1, 
             10000
         );
-        const results = {camera};
-        console.log('R', results);
+        const results = { camera };
         if(options.type === 'orbital'){
             const controls = new OrbitControls( camera, options.dom );
             controls.target.set( 8, 8, 0 );
             controls.minPolarAngle = Math.PI * .5; 
             controls.maxPolarAngle = Math.PI;
-            controls.maxDistance = 40;
+            //controls.maxDistance = 40;
+            controls.maxDistance = 200;
             camera.position.set( 5, -20, 8 );
             camera.up.set(0, 1, 0);
             controls.update();

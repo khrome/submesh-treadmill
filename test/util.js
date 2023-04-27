@@ -26,6 +26,7 @@ let cameraType = null;
 export const importHack = ()=>{
     cameraType = 'orbital';
     let headless = false;
+    let debug = false;
     if(typeof global === 'object'){
        if(!global.window) global.window = {
            addEventListener: ()=>{}
@@ -39,9 +40,11 @@ export const importHack = ()=>{
        };
        headless = true;
        cameraType = 'perspective';
+    }else{
+        const params = new URLSearchParams(window.location.search);
+        if(params.get('debug')) debug = true;
     }
     const should = (chai.should?chai:window.chai).should();
-    const debug = true;
     return { debug, should, chai, cameraType, headless};
 }
 //END BULLSHIT IMPORT HACKS
@@ -67,7 +70,6 @@ export const buildScene = (options={})=>{
         aspectRatio: (window.innerWidth / window.innerHeight)
     });
     scene.add(camera);
-    console.log(renderer);
     const avatar = new Marker(new Cube({ color: 'red' }));
     container.append(renderer.domElement);
     Treadmill.handleResize(container, camera, renderer);
@@ -78,10 +80,6 @@ export const buildScene = (options={})=>{
             geometry.translate( 8, 8, 0 ); //reorient to origin @ ll corner
             const submesh = new SimpleSubmesh(geometry, new Vector2(x, y), {
                 onMarkerExit : (marker, submesh, action)=>{
-                    if(options.debug){
-                        console.log('was removed?', submesh.markers.indexOf(marker) === -1);
-                        console.log('is avatar?', marker === avatar);
-                    }
                     const newSubmesh = treadmill.submeshAt(
                         marker.mesh.position.x, 
                         marker.mesh.position.y
@@ -125,7 +123,6 @@ export const buildScene = (options={})=>{
             return new Promise((resolve, reject)=>{
                 let resolved = false;
                 setTimeout(()=>{
-                    console.log('timeout triggered!')
                     if(!resolved){
                         renderer.setAnimationLoop(null);
                         renderer.domElement.remove();

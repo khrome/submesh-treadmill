@@ -123,11 +123,11 @@ export class Marker {
         //directionVector.rotation.z = this.mesh.rotation.z;
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
-        let localTarget = target && treadmill.treadmillPointFor(target);
-        // console.log('[OUT]>', localTarget, target, [treadmill.x, treadmill.y]);
+        let localTarget = target; //&& treadmill.treadmillPointFor(target);
         if(window.tools) {
             if(localTarget) window.tools.showPoint(localTarget, 'target', '#0000FF');
             if(target) window.tools.showPoint(target, 'target', '#000099');
+            window.tools.showRay(raycaster, 'bearing-ray', '#000055');
         }
         if(
             target &&
@@ -168,7 +168,7 @@ export class Marker {
         const turnSpeed = this.values.turnSpeed || 0.1;
         const maxRotation = turnSpeed * delta;
         if(target){
-            const localTarget = treadmill.treadmillPointFor(target);
+            const localTarget = target; //treadmill.treadmillPointFor(target);
             const raycaster = this.lookAt(localTarget);
             const xDist = localTarget.x - this.mesh.position.x;
             const yDist = localTarget.y - this.mesh.position.y;
@@ -177,10 +177,9 @@ export class Marker {
             if (targetAngle > twoPI) { targetAngle -= twoPI; }
             const delta = this.mesh.rotation.z - targetAngle;
             const motion = direction * maxRotation;
-            if(false && window.tools) {
-                window.tools.showRay(raycaster);
-                window.tools.showPoint(localTarget, 'target', '#0000FF');
-                window.tools.showPoint(target, 'target', '#000099');
+            if(window.tools) {
+                window.tools.showRay(raycaster, 'turn-target-ray', '#0000FF');
+                window.tools.showPoint(localTarget, 'turn-target', '#0000FF');
             }
             if(delta > maxRotation){
                 const newValue = this.mesh.rotation.z + motion;
@@ -334,16 +333,13 @@ export class Marker {
         if(typeof name === 'number'){
             //todo: convert index to action
         }
-        let target = targ;
+        let target = targ.clone();
         /*if(target instanceof Vector3){
             const oldV = target;
             target = treadmill.worldPointFor(target)
             console.log('WorldVector', target, oldV, [treadmill.x, treadmill.y])
         }*/
         const definition = { action, options, target };
-        console.log('DEF', definition)
-        
-        console.log(definition, this.doing)
         this.doing.push(definition);
     }
     
@@ -353,10 +349,9 @@ export class Marker {
         if(!this.object.actions[action.action]) throw new Error(`Unsupported Action: ${action.name}`);
         const localTarget = treadmill.treadmillPointFor(action.target);
         const worldPosition = treadmill.worldPointFor(this.mesh.position);
-        console.log('??', dispCoords(worldPosition), worldPosition.distanceTo(action.target), dispCoords(action.target), [treadmill.x, treadmill.y]);
         if(window.tools){
-            window.tools.showPoint(localTarget, 'local-tick', '#00FF00');
-            window.tools.showPoint(action.target, 'world-tick', '#009900');
+            window.tools.showPoint(localTarget, 'target-world', '#00FF00');
+            //window.tools.showPoint(action.target, 'world-tick', '#009900');
         }
         const remainder = this.object.actions[action.action](delta, this, localTarget, action.options, treadmill);
         if(remainder !== -1) this.doing.shift();
@@ -423,7 +418,6 @@ export class Marker {
                     selected.forEach((marker)=>{
                         const markerPoint = marker.mesh.position;
                         const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
-                        console.log('[IN]>', markerPoint, markerWorldPoint, [treadmill.x, treadmill.y]);
                         if(window.tools){
                             window.tools.showPoint(point, 'local', '#FF0000');
                             window.tools.showPoint(worldPoint, 'world', '#990000');

@@ -12,17 +12,19 @@
     "scripts": {
         "lint": "./node_modules/.bin/eslint *.js src/*.js test/*.js",
         "test": "./node_modules/.bin/mocha",
-        "browser-test":"open http://localhost:8000/test/test.html; npx http-server -p 8000",
+        "browser-test": "open http://localhost:8000/test/test.html; npx http-server -p 8000",
         "container-test": "docker build . -t submesh-treadmill -f ./containers/test.dockerfile; docker logs --follow \"$(docker run -d submesh-treadmill)\"",
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview"
     },
     "dependencies": {
+        "dat.gui": "^0.7.9",
         "extended-emitter-es6": "^1.1.2",
         "seed-random": "^2.2.0",
         "stats.js": "^0.17.0",
         "three": "^0.151.3",
+        "three-spritetext": "^1.8.0",
         "vite": "^4.2.1"
     }
 }
