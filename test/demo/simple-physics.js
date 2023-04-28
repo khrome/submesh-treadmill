@@ -118,14 +118,23 @@ treadmill.loading.then(()=>{
     scene.add(directional.target);
     directional.updateMatrixWorld();
     
+    if(debug){
+        window.tools = new DevelopmentTools({ scene, clock, renderer, light: directional, camera });
+        window.tools.addShadowCamera();
+        window.tools.sceneAxes(new Vector3(0, 0, 0));
+        window.tools.show('output', document.body);
+        window.tools.show('mesh', document.body);
+        window.tools.activateMeshPointSelection(document.body, renderer, scene, camera, treadmill);
+    }
+    
     renderer.setAnimationLoop(() => {
-        tools.tickStart();
+        if(window.tools) window.tools.tickStart();
         const delta = clock.getDelta();
         treadmill.tick(delta);
         if(directional.tick) directional.tick();
         controls.update();
         renderer.render(scene, camera);
-        tools.tickStop();
+        if(window.tools) window.tools.tickStop();
     }, 100);
     
     Marker.enableSelection(document.body, camera, renderer, treadmill, [Cube]);
@@ -133,12 +142,4 @@ treadmill.loading.then(()=>{
     window.addEventListener('keydown', window.handleKey);
     
     setInterval(()=>{ if(running) cameraMarker.forward(0.2, null, null, treadmill) }, 10);
-    if(debug){
-        window.tools = new DevelopmentTools({ scene, clock, renderer, light: directional, camera });
-        tools.addShadowCamera();
-        tools.sceneAxes(new Vector3(0, 0, 0));
-        tools.show('output', document.body);
-        tools.show('mesh', document.body);
-        tools.activateMeshPointSelection(document.body, renderer, scene, camera, treadmill);
-    }
 });

@@ -125,6 +125,7 @@ treadmill = new Treadmill({
 }, scene);
 
 const cameraMarker = new Marker(new Cube({ color: 'red' }));
+cameraMarker.mesh.rotateZ( Math.PI/2 );
 let running = false;
 
 window.handleKey = (event)=>{ //handle iframes, yay!
@@ -172,7 +173,7 @@ treadmill.loading.then(()=>{
     
     window.addEventListener('keydown', window.handleKey);
     
-    setInterval(()=>{ if(running) cameraMarker.forward(1, null, null, treadmill) }, 10);
+    setInterval(()=>{ if(running) cameraMarker.forward(0.1, null, null, treadmill) }, 10);
     // tools.sceneAxes(new Vector3(0, 0, 0));
     tools.show('output', document.body);
     //tools.show('mesh', document.body);
