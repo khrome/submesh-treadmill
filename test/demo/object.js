@@ -1,5 +1,5 @@
 // Sample usage for vite
-import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill.js';
+import { Treadmill, Submesh, Marker, MeshObject, Projectile } from '../../submesh-treadmill.js';
 //import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
 import {
     BoxGeometry,
@@ -26,6 +26,40 @@ import {
     PerspectiveCamera
 } from "three";
 
+export class Ball extends Projectile{
+    
+    constructor(options={}){
+        super(options);
+        this.size = this.options.size || 0.25;
+        this.color = options.color || Math.random() * 0xffffff ;
+    }
+    
+    buildObject(){
+        //const geometry = new BoxGeometry(this.size,this.size,this.size);
+        const height = this.options.height || 2;
+        const geometry = new SphereGeometry( this.size, 8, 8 );
+        geometry.applyMatrix4( new Matrix4().makeRotationX( Math.PI / 2 ) );
+        geometry.applyMatrix4( new Matrix4().makeTranslation( 0,  0, height/2) );
+        const material = new MeshPhongMaterial({
+            color: this.color,    // red (can also use a CSS color string here)
+            flatShading: false,
+        });
+        const mesh = new Mesh( geometry, material );
+        mesh.castShadow = true;
+        const object = new Group();
+        object.add(mesh);
+        if(window.tools){ //TODO: make these work
+            console.log('added axes');
+            const offset = mesh.position.clone();
+            offset.x -= .002;
+            offset.y -= .002;
+            offset.z -= .002;
+            object.add(window.tools.axes(offset));
+        }
+        return object;
+    }
+}
+
 export class Cube extends MeshObject{
     constructor(options={}){
         super(options);
@@ -36,6 +70,8 @@ export class Cube extends MeshObject{
     defaultValues(){
         return {
             "movementSpeed" : 1,
+            "durability": 100,
+            "collisionRadius" : 0.5,
             "turnSpeed" : 0.1,
             "health" : 10
         }
@@ -43,7 +79,7 @@ export class Cube extends MeshObject{
     
     defineActions(){
         return {
-            priority: ['moveTo', 'attack'],
+            priority: ['moveTo', 'interact'],
             moveTo: (delta, marker, target, options={}, treadmill) => { //meta
                 //todo: test "crow flies" obstruction, if obstructed: path find
                 //window.tools.showPoint(target, 'target');
@@ -72,14 +108,20 @@ export class Cube extends MeshObject{
             backward: (delta, marker, target, options={}, treadmill) => {
                 return marker.backward(delta, target, options, treadmill);
             },
-            interact: (delta, marker, target, options={}) => {
-                console.log('attack', target);
+            interact: (delta, marker, target, options={}, treadmill) => {
+                // create projectile
+                const ball = new Ball();
+                const worldPoint = treadmill.worldPointFor(target);
+                const newMarker = marker.spawn(ball, target);
+                const submesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
+                submesh.markers.push(newMarker);
+                treadmill.scene.add(newMarker.mesh);
+                newMarker.action('moveTo', worldPoint);
             }
         };
     }
     
     buildObject(){
-        //const geometry = new BoxGeometry(this.size,this.size,this.size);
         const height = this.options.height || 2;
         const geometry = new CylinderGeometry( this.size, this.size, height, 8 );
         geometry.applyMatrix4( new Matrix4().makeRotationX( Math.PI / 2 ) );

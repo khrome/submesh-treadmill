@@ -159,6 +159,17 @@ export class Submesh{
         //todo: for
         if(markers) for(; markerIndex < markers.length; markerIndex++){
             marker = markers[markerIndex];
+            if(marker.destroyed){
+                const index = this.markers.indexOf(marker);
+                if(index !== -1){
+                    this.markers.splice(index, 1);
+                    treadmill.scene.remove(marker.mesh);
+                }else{
+                    console.log('tried to remove a marker that doesn\'t exist in this submesh');
+                }
+                
+                //todo: notify, for parallel removal
+            }
             if(marker.doing.length) marker.actionTick(delta, treadmill);
             x = marker.mesh.position.x;
             y = marker.mesh.position.y;

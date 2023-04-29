@@ -63,7 +63,8 @@ export class Marker {
         }
         this.random = options.random || Math.random;
         this.active = true; //todo: only if npc
-        this.values = this.object.defaultValues();
+        this.original = this.object.defaultValues();
+        this.values = JSON.parse(JSON.stringify(this.original));
         this.doing = [];
         this.allInfo = ()=>{
             return Object.assign({}, this.object.options, this.options, this.values);
@@ -105,7 +106,19 @@ export class Marker {
         ), scene);
     }*/
     
-    moveInOrientation = (directionVector, delta=1, target, treadmill)=>{
+    currentOriginalRatio(name){
+        if(this.values[name] && this.original[name]){
+            return this.values[name] / this.original[name];
+        }
+    }
+    
+    alterDurability(types, direction=1){
+        //todo: factor in resistances
+        const adjustment = Object.keys(types).reduce((agg, key)=> agg + types[key] * direction, 0);
+        this.values.durability -= adjustment;
+    }
+    
+    moveInOrientation(directionVector, delta=1, target, treadmill){
         let origin = null;
         if(this.boundingBox){
             origin = this.boundingBox.getCenter()
@@ -117,10 +130,7 @@ export class Marker {
         const movementSpeed = this.values.movementSpeed || 1;
         const maxDistance = movementSpeed * delta;
         const quaternion = new Quaternion();
-        //quaternion.z = this.mesh.quaternion.z
-        //directionVector.applyQuaternion(quaternion);
         directionVector.applyQuaternion(this.mesh.quaternion);
-        //directionVector.rotation.z = this.mesh.rotation.z;
         raycaster.ray.origin.copy(origin);
         raycaster.ray.direction.copy(directionVector);
         let localTarget = target; //&& treadmill.treadmillPointFor(target);
@@ -128,6 +138,15 @@ export class Marker {
             if(localTarget) window.tools.showPoint(localTarget, 'target', '#0000FF');
             if(target) window.tools.showPoint(target, 'target', '#000099');
             window.tools.showRay(raycaster, 'bearing-ray', '#000055');
+        }
+        const markers = treadmill.activeMarkers();
+        let lcv=0;
+        for(;lcv < markers.length; lcv++){
+            const threshold = markers[lcv].values.collisionRadius + this.values.collisionRadius;
+            if(markers[lcv] === this) continue;
+            if(this.mesh.position.distanceTo(markers[lcv].mesh.position) <= threshold){
+                this.impact(markers[lcv], treadmill);
+            }
         }
         if(
             target &&
@@ -313,6 +332,30 @@ export class Marker {
     cancelAnimation(){
         if(this.animation) this.animation.stop();
     }
+    
+    spawn(object, target){
+        const spawned = new Marker(object);
+        const raycaster = this.lookAt(target);
+        const outside = spawned.values.collisionRadius + this.values.collisionRadius;
+        const spawnpoint = raycaster.ray.at(outside, target);
+        spawnpoint.z += 0.5;
+        if(window.tools){
+            window.tools.showRay(raycaster, 'spawn-d');
+            window.tools.showPoint(spawnpoint, 'spawn-p');
+        }
+        spawned.mesh.position.copy(spawnpoint);
+        return spawned;
+    }
+    
+    destroy(){
+        this.destroyed = true; //remove from any treadmills
+    }
+    
+    impact(marker, treadmill){
+        if(this.destroyed || marker.destroyed) return;
+        this.doing = [];
+        if(this.object.impact) this.object.impact(marker, this, treadmill);
+    }
 
     convertAnimation(xOffset, yOffset){
         if(this.animation) this.animation.stop();
@@ -331,7 +374,9 @@ export class Marker {
     action(name, targ, options={}, treadmill){
         let action = name;
         if(typeof name === 'number'){
+            const actions = this.object.actions?.priority || []
             //todo: convert index to action
+            action = actions[name];
         }
         let target = targ.clone();
         /*if(target instanceof Vector3){
@@ -346,12 +391,12 @@ export class Marker {
     actionTick(delta, treadmill){
         if(!this.doing.length) return;
         const action = this.doing[0];
-        if(!this.object.actions[action.action]) throw new Error(`Unsupported Action: ${action.name}`);
+        if(!this.object.actions[action.action]) throw new Error(`Unsupported Action: ${action.action}`);
         const localTarget = treadmill.treadmillPointFor(action.target);
         const worldPosition = treadmill.worldPointFor(this.mesh.position);
         if(window.tools){
             window.tools.showPoint(localTarget, 'target-world', '#00FF00');
-            //window.tools.showPoint(action.target, 'world-tick', '#009900');
+            window.tools.showPoint(action.target, 'world-AT', '#009900');
         }
         const remainder = this.object.actions[action.action](delta, this, localTarget, action.options, treadmill);
         if(remainder !== -1) this.doing.shift();
@@ -390,13 +435,13 @@ export class Marker {
                 meta[metalist[metaIndex].toLowerCase()] = false;
             }
         });
-        container.addEventListener('click', (event)=>{
+        const clickHandler = (event)=>{
             var raycaster = new Raycaster(); // create once
             var mouse = new Vector2(); // create once
         
             mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
             mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
-            console.log(meta);
+            //console.log(meta, event);
             
             raycaster.setFromCamera( mouse, camera );
             const submeshes = treadmill.activeSubmeshes();
@@ -412,27 +457,51 @@ export class Marker {
             if(intersects && intersects[0]){
                 const foundSubmesh = submeshes.find((submesh)=>{ return submesh.mesh == intersects[0].object});
                 const foundMarker = markers.find((marker)=>{ return firstNodeWithGeometryInTree(marker.mesh) == intersects[0].object});
-                if(foundSubmesh){
-                    const point = intersects[0].point;
-                    const worldPoint = treadmill.worldPointFor(point);
-                    selected.forEach((marker)=>{
-                        const markerPoint = marker.mesh.position;
-                        const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
-                        if(window.tools){
-                            window.tools.showPoint(point, 'local', '#FF0000');
-                            window.tools.showPoint(worldPoint, 'world', '#990000');
-                        }
-                        if(!meta.shift){
-                            marker.doing = [];
-                        }
-                        marker.action('moveTo', worldPoint, {}, treadmill);
-                    });
-                }
-                if(foundMarker){
-                    selected = [foundMarker];
+                if(event.type === 'contextmenu'){
+                    if(foundSubmesh){ // target a spot on the ground
+                        const point = intersects[0].point;
+                        const worldPoint = treadmill.worldPointFor(point);
+                        selected.forEach((marker)=>{
+                            const markerPoint = marker.mesh.position;
+                            const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
+                            if(window.tools){
+                                window.tools.showPoint(point, 'local-action', '#FF0000');
+                                window.tools.showPoint(worldPoint, 'world-action', '#990000');
+                            }
+                            if(!meta.shift){
+                                marker.doing = [];
+                            }
+                            marker.action(1, worldPoint, {}, treadmill);
+                        });
+                    }
+                    if(foundMarker){ //target another marker
+                        console.log('attack marker');
+                    }
+                }else{
+                    if(foundSubmesh){
+                        const point = intersects[0].point;
+                        const worldPoint = treadmill.worldPointFor(point);
+                        selected.forEach((marker)=>{
+                            const markerPoint = marker.mesh.position;
+                            const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
+                            if(window.tools){
+                                window.tools.showPoint(point, 'local', '#FF0000');
+                                window.tools.showPoint(worldPoint, 'world', '#990000');
+                            }
+                            if(!meta.shift){
+                                marker.doing = [];
+                            }
+                            marker.action('moveTo', worldPoint, {}, treadmill);
+                        });
+                    }
+                    if(foundMarker){
+                        selected = [foundMarker];
+                    }
                 }
             }
-        });
+        };
+        container.addEventListener('click', clickHandler);
+        container.addEventListener('contextmenu', clickHandler);
         return selected;
     }
 };

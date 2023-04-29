@@ -3,6 +3,7 @@ import { Vector2, Vector3, Raycaster } from "three";
 import { Submesh } from './src/submesh.js';
 import { MeshObject } from './src/object.js';
 import { Marker } from './src/marker.js';
+import { Projectile } from './src/projectile.js';
 import { Tile } from './src/tile-direction.js';
 
 const groundRaycaster = new Raycaster( 
@@ -32,7 +33,7 @@ const debounce_leading = (func, name='default', timeout = 300)=>{
     };
 }
 
-export { Submesh, MeshObject, Marker, Tile };
+export { Submesh, MeshObject, Marker, Tile, Projectile };
 
 export class Treadmill {
     static handleResize(container, camera, renderer){
