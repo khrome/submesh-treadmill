@@ -402,23 +402,15 @@ export class Marker {
         if(this.mesh.highlightedOutline) this.mesh.highlightedOutline.position.copy(this.mesh.position);
         if(!this.object.actions[action.action]) throw new Error(`Unsupported Action: ${action.action}`);
         const localTarget = treadmill.treadmillPointFor(action.target);
-        const worldPosition = treadmill.worldPointFor(this.mesh.position);
-        const localOrigin = treadmill.treadmillPointFor(action.origin);
-        if(window.tools){
-            Logger.log('tick-target', Logger.WARN, 'marker', localTarget);
-            Logger.log('tick-origin', Logger.WARN, 'marker', localOrigin);
-        }
         if(this.values.range){
-            //const localOrigin = treadmill.treadmillPointFor(action.origin);
-            const raycaster = new Raycaster(localOrigin, localTarget);
-            //if(window.tools){
-            //    Logger.log('range-ray', Logger.DEBUG, 'marker', raycaster);
-            //    Logger.log('range-max', Logger.DEBUG, 'marker', raycaster.ray.at(this.values.range, localTarget));
-            //}
-            console.log(raycaster.ray.distanceToPoint(this.mesh.position), this.values.range);
-            //if(raycaster.ray.distanceToPoint(this.mesh.position) > this.values.range){
-                //this.destroy();
-            //}
+            const localOrigin = treadmill.treadmillPointFor(action.origin);
+            if(window.tools){
+                Logger.log('tick-target', Logger.WARN, 'marker', localTarget);
+                Logger.log('tick-origin', Logger.WARN, 'marker', localOrigin);
+            }
+            if(localOrigin.distanceTo(this.mesh.position) > this.values.range){
+                this.destroy();
+            }
             
         }
         const remainder = this.object.actions[action.action](delta, this, localTarget, action.options, treadmill);
