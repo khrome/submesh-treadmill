@@ -52,6 +52,7 @@ export class Projectile extends MeshObject{
             "damage" : {
                 "ballistic" : 10
             },
+            "range" : 20,
             "durability": 100,
             "turnSpeed" : 7, // > 2pi
             "health" : 10

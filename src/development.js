@@ -18,6 +18,7 @@ import {
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 //import * as dat from 'dat.gui';
 import SpriteText from 'three-spritetext';
+import Logger from 'bitwise-logger';
 
 const kvs = {}
 
@@ -35,11 +36,29 @@ let point = {};
 let fonts = {};
 let textLabels = {};
 
+export { Logger };
 export class DevelopmentTools{
     constructor(options={}){
         this.options = options;
         this.panes = {};
         this.stats = {};
+        const colors = {};
+        const colorFor = (name)=>{
+            if(!colors[name]) colors[name] = (Math.random() * 0xffffff);
+            return colors[name];
+        };
+        Logger.registerChannel({ // should work for any console.log() interface
+            log: (level, message, ...data)=>{
+                data.forEach((item)=>{
+                    if(item instanceof Raycaster){
+                        this.showRay(item, message, colorFor(message));
+                    }
+                    if(item instanceof Vector3){
+                        this.showPoint(item, message, colorFor(message));
+                    }
+                });
+            }
+        });
     }
     
     value(ob, value){

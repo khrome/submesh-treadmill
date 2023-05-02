@@ -19,6 +19,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "bitwise-logger": "^0.0.1",
         "dat.gui": "^0.7.9",
         "extended-emitter-es6": "^1.1.2",
         "seed-random": "^2.2.0",

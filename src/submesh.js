@@ -65,6 +65,8 @@ export class Submesh{
             y = marker.mesh.position.y + delta.y;
             newPoint.set(x, y, this.getHeightAt(x, y) );
             marker.moveTo(newPoint);
+            if(marker.mesh.highlightedOutline) marker.mesh.highlightedOutline.position.copy(marker.mesh.position)
+            if(marker.mesh.selectedOutline) marker.mesh.selectedOutline.position.copy(marker.mesh.position)
         });
     }
 

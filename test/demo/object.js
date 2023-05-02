@@ -12,6 +12,9 @@ import {
     DirectionalLight,
     SphereGeometry,
     CylinderGeometry,
+    LineSegments,
+    EdgesGeometry,
+    LineBasicMaterial,
     PlaneGeometry,
     AmbientLight,
     Matrix4,
@@ -82,7 +85,6 @@ export class Cube extends MeshObject{
             priority: ['moveTo', 'interact'],
             moveTo: (delta, marker, target, options={}, treadmill) => { //meta
                 //todo: test "crow flies" obstruction, if obstructed: path find
-                //window.tools.showPoint(target, 'target');
                 marker.action('turn', treadmill.worldPointFor(target), options, treadmill);
                 marker.action('forward', treadmill.worldPointFor(target), options, treadmill);
                 return delta; 
@@ -116,7 +118,7 @@ export class Cube extends MeshObject{
                 const submesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
                 submesh.markers.push(newMarker);
                 treadmill.scene.add(newMarker.mesh);
-                newMarker.action('moveTo', worldPoint);
+                newMarker.action('moveTo', worldPoint, {}, treadmill);
             }
         };
     }
@@ -134,6 +136,17 @@ export class Cube extends MeshObject{
         mesh.castShadow = true;
         const object = new Group();
         object.add(mesh);
+        
+        if(true){
+            object.selectedOutline = new LineSegments(
+                new EdgesGeometry(geometry), 
+                new LineBasicMaterial({color: 0x00FFFF})
+            );
+            object.highlightedOutline = new LineSegments(
+                new EdgesGeometry(geometry), 
+                new LineBasicMaterial({color: 0xFFFFFF})
+            );
+        }
         if(window.tools){ //TODO: make these work
             console.log('added axes');
             const offset = mesh.position.clone();
