@@ -70,6 +70,10 @@ const { camera, controls } = createCamera({
 controls.update();
 
 Treadmill.handleResize(container, camera, renderer);
+const physicalWorld = new CANNON.World({
+    gravity: new CANNON.Vec3(0, 0, -9.81)
+});
+physicalWorld.timeStep = 1/60;
 treadmill = new Treadmill({
     createSubmesh: (x, y)=>{
         const size = SimpleSubmesh.tileSize;
@@ -91,7 +95,7 @@ treadmill = new Treadmill({
         return submesh;
     },
     x:2, y:2
-}, scene);
+}, scene, physicalWorld);
 
 let running = false;
 const cameraMarker = new Marker(new Cube({ color: 'red' }));

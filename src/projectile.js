@@ -25,14 +25,14 @@ export class Projectile extends MeshObject{
             forward: (delta, marker, target, options={}, treadmill) => {
                 return marker.forward(delta, target, options, treadmill);
             }
-            
         };
     }
     
     impact(marker, impactingMarker, treadmill){
-        //treadmill.scene.remove(impactingMarker.mesh);
-        //console.log(marker.damage, impactingMarker.damage);
         //todo: allow ricochet;
+        if(marker.actions.impact) return marker.actions.impact(
+            marker, impactingMarker, {}, treadmill
+        );
         impactingMarker.destroy();
         marker.alterDurability(impactingMarker.values.damage);
         impactingMarker.alterDurability(impactingMarker.values.damage);

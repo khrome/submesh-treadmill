@@ -52,7 +52,7 @@ export class Marker {
             this.boundingBox = bbox(this.mesh);
         }catch(ex){}
         if(this.object.buildCollisionObject){
-            this.body = this.object.buildCollisionObject(this.mesh, this);
+            this.body = this.object.buildCollisionObject(this.mesh.geometry, this);
         }
         this.options = options;
         if(this.options.shadow && this.options.shadow === 'mesh'){

@@ -8,29 +8,13 @@ export class PhysicsProjectile extends Projectile{
     
     defineActions(){
         return {
-            settle: (delta, marker, target, options={}, treadmill) => {
+            settle: (marker, target, options={}, treadmill) => {
                 
             },
-            impact: (delta, marker, target, options={}, treadmill) => {
+            impact: (marker, incomingMarker, options={}, treadmill) => {
                 
             }
         };
-    }
-    
-    impact(marker, impactingMarker, treadmill){
-        //treadmill.scene.remove(impactingMarker.mesh);
-        //console.log(marker.damage, impactingMarker.damage);
-        //todo: allow ricochet;
-        impactingMarker.destroy();
-        marker.alterDurability(impactingMarker.values.damage);
-        impactingMarker.alterDurability(impactingMarker.values.damage);
-        if(marker.values.durability <= 0){
-            if(marker.object.actions.destroy){
-                console.log('implement action destruction');
-            }else{
-                marker.destroy();
-            }
-        }
     }
     
     defaultValues(){

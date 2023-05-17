@@ -5,6 +5,7 @@ import { MeshObject } from './src/object.js';
 import { Marker } from './src/marker.js';
 import { Projectile } from './src/projectile.js';
 import { Tile } from './src/tile-direction.js';
+import { PhysicsProjectile } from './src/physics-projectile.js';
 
 const groundRaycaster = new Raycaster( 
     new Vector3(), 
@@ -33,7 +34,7 @@ const debounce_leading = (func, name='default', timeout = 300)=>{
     };
 }
 
-export { Submesh, MeshObject, Marker, Tile, Projectile };
+export { Submesh, MeshObject, Marker, Tile, Projectile, PhysicsProjectile };
 
 export class Treadmill {
     static handleResize(container, camera, renderer){
@@ -187,7 +188,9 @@ export class Treadmill {
     }
 
     tick(delta){
-        if(this.physicalWorld) this.physicalWorld.step(this.options.timestep || 1/60);
+        if(this.physicalWorld){
+            this.physicalWorld.step(this.options.timestep || 1/60);
+        }
         const submeshes = this.activeSubmeshes()
         let submeshIndex = 0;
         for(; submeshIndex < submeshes.length; submeshIndex++){

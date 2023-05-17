@@ -23,6 +23,9 @@ export class Submesh{
         this.size = Submesh.tileSize;
         this.mesh = this.createMesh(geometry, tilePosition);
         this.body = this.createPhysicalMesh(this.mesh);
+        if(this.body){
+            this.body.markerType = 'submesh';
+        }
         this.markers = this.createMarkers() || [];
     }
 
@@ -148,8 +151,15 @@ export class Submesh{
 
     tick(delta, scene, treadmill){
         if(this.mesh.position && this.body && this.body.position){
-            this.body.position.copy(this.mesh.position);
-            this.body.quaternion.copy(this.mesh.quaternion);
+            if(this.physics){
+                //physics mode, copy position from body
+                this.mesh.position.copy(this.body.position);
+                this.mesh.quaternion.copy(this.body.quaternion);
+            }else{
+                //marker mode, copy position to body
+                this.body.position.copy(this.mesh.position);
+                this.body.quaternion.copy(this.mesh.quaternion);
+            }
         }
         let markerIndex = 0;
         const markers = this.markers;

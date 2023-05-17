@@ -22,6 +22,7 @@ import {
     Vector3,
     PerspectiveCamera
 } from "three";
+import * as CANNON from 'cannon-es';
 import { Cube } from './object.js';
 
 // each submesh has squares on it representing it's coordinates
@@ -31,7 +32,15 @@ export class SimpleSubmesh extends Submesh{
     }
 
     createPhysicalMesh(geometry){
-        return null;
+        const physicalGroundMaterial = new CANNON.Material();
+        const physicsMesh = new CANNON.Body({
+            shape: new CANNON.Plane(),
+            //new CANNON.Trimesh(submesh.coords, submesh.coords.map((item, index)=>index)),
+            type: CANNON.Body.STATIC,
+            material: physicalGroundMaterial
+            //mass:5
+        });
+        return physicsMesh;
     }
 
     createMarkers(){
