@@ -30,7 +30,7 @@ export class Projectile extends MeshObject{
     
     impact(marker, impactingMarker, treadmill){
         //todo: allow ricochet;
-        if(marker.actions.impact) return marker.actions.impact(
+        if(marker?.actions?.impact) return marker.actions.impact(
             marker, impactingMarker, {}, treadmill
         );
         impactingMarker.destroy();

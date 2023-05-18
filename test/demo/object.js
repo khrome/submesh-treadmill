@@ -136,7 +136,7 @@ export class Cube extends MeshObject{
     
     defineActions(){
         return {
-            priority: ['moveTo', 'interact'],
+            priority: ['moveTo', 'interact', 'toss'],
             moveTo: (delta, marker, target, options={}, treadmill) => { //meta
                 //todo: test "crow flies" obstruction, if obstructed: path find
                 marker.action('turn', treadmill.worldPointFor(target), options, treadmill);
@@ -166,6 +166,7 @@ export class Cube extends MeshObject{
             },
             interact: (delta, marker, target, options={}, treadmill) => {
                 // create projectile
+                console.log('interact')
                 const ball = new Ball();
                 const worldPoint = treadmill.worldPointFor(target);
                 const newMarker = marker.spawn(ball, target);
@@ -173,6 +174,17 @@ export class Cube extends MeshObject{
                 submesh.markers.push(newMarker);
                 treadmill.scene.add(newMarker.mesh);
                 newMarker.action('moveTo', worldPoint, {}, treadmill);
+            },
+            toss: (delta, marker, target, options={}, treadmill) => {
+                // create projectile
+                console.log('toss')
+                const ball = new BouncyBall();
+                const worldPoint = treadmill.worldPointFor(target);
+                const newMarker = marker.spawn(ball, target);
+                const submesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
+                submesh.markers.push(newMarker);
+                treadmill.scene.add(newMarker.mesh);
+                
             }
         };
     }

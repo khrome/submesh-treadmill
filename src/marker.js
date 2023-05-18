@@ -299,7 +299,7 @@ export class Marker {
         this.remove = ()=>{
             scene.remove(this.mesh);
             //todo: remove from submesh.markers, too
-            if(this.body) scene.treadmill.internal.physics.world.removeBody(this.body);
+            if(this.body) scene.treadmill.physicalWorld.removeBody(this.body);
         }
         if(position){
             this.moveTo(position, scene);
@@ -308,7 +308,7 @@ export class Marker {
         let raycaster = null;
         if(target) raycaster = this.lookAt(target);
         if(this.body){
-            scene.treadmill.internal.physics.world.addBody(this.body);
+            scene.treadmill.physicalWorld.addBody(this.body);
             if(target && options.velocity && raycaster){
                 //todo if debug, draw ray
                 this.body.velocity.set(
@@ -571,7 +571,11 @@ export class Marker {
                             if(!meta.shift){
                                 marker.doing = [];
                             }
-                            marker.action(1, worldPoint, {}, treadmill);
+                            if(meta.alt){
+                               marker.action(2, worldPoint, {}, treadmill);
+                            }else{
+                               marker.action(1, worldPoint, {}, treadmill);
+                            }
                         });
                     }
                     if(foundMarker){ //target another marker
