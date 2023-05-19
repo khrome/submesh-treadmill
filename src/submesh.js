@@ -150,7 +150,7 @@ export class Submesh{
     }
 
     tick(delta, scene, treadmill){
-        if(this.mesh.position && this.body && this.body.position){
+        /*if(this.mesh.position && this.body && this.body.position){
             if(this.physics){
                 //physics mode, copy position from body
                 this.mesh.position.copy(this.body.position);
@@ -160,7 +160,7 @@ export class Submesh{
                 this.body.position.copy(this.mesh.position);
                 this.body.quaternion.copy(this.mesh.quaternion);
             }
-        }
+        }*/
         let markerIndex = 0;
         const markers = this.markers;
         let marker = null;
@@ -179,7 +179,18 @@ export class Submesh{
                 }else{
                     console.log('tried to remove a marker that doesn\'t exist in this submesh');
                 }
-                
+                if(marker.mesh.position && marker.body && marker.body.position){
+                    if(marker.object && marker.object.physics){
+                        console.log('PHYSMODE')
+                        //physics mode, copy position from body
+                        marker.mesh.position.copy(marker.body.position);
+                        marker.mesh.quaternion.copy(marker.body.quaternion);
+                    }else{
+                        //marker mode, copy position to body
+                        marker.body.position.copy(marker.mesh.position);
+                        marker.body.quaternion.copy(marker.mesh.quaternion);
+                    }
+                }
                 //todo: notify, for parallel removal
             }
             if(marker.doing.length) marker.actionTick(delta, treadmill);
