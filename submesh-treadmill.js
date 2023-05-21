@@ -190,6 +190,7 @@ export class Treadmill {
 
     tick(delta){
         if(this.physicalWorld){
+            console.log('PHYS')
             this.physicalWorld.step(delta);
         }
         const submeshes = this.activeSubmeshes()
