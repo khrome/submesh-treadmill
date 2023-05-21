@@ -1,6 +1,6 @@
 import { Raycaster, Vector3, Vector2, ArrowHelper, Quaternion } from "three";
 // import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
-//import { Emitter } from 'extended-emitter-es6';
+import { Emitter } from 'extended-emitter-es6';
 //const Emitter = exem.Emitter;
 import { DevelopmentTools, Logger } from './development.js'
 
@@ -299,7 +299,7 @@ export class Marker {
         this.remove = ()=>{
             scene.remove(this.mesh);
             //todo: remove from submesh.markers, too
-            if(this.body) scene.treadmill.physicalWorld.removeBody(this.body);
+            if(this.body) scene.physicalWorld.removeBody(this.body);
         }
         if(position){
             this.moveTo(position, scene);
@@ -308,7 +308,7 @@ export class Marker {
         let raycaster = null;
         if(target) raycaster = this.lookAt(target);
         if(this.body){
-            scene.treadmill.physicalWorld.addBody(this.body);
+            scene.physicalWorld.addBody(this.body);
             if(target && options.velocity && raycaster){
                 //todo if debug, draw ray
                 this.body.velocity.set(
@@ -558,9 +558,9 @@ export class Marker {
                 const foundSubmesh = submeshes.find((submesh)=>{ return submesh.mesh == intersects[0].object});
                 const foundMarker = markers.find((marker)=>{ return firstNodeWithGeometryInTree(marker.mesh) == intersects[0].object});
                 if(event.type === 'contextmenu'){
+                    const point = intersects[0].point;
+                    const worldPoint = treadmill.worldPointFor(point);
                     if(foundSubmesh){ // target a spot on the ground
-                        const point = intersects[0].point;
-                        const worldPoint = treadmill.worldPointFor(point);
                         selectionModel.all((marker)=>{
                             const markerPoint = marker.mesh.position;
                             const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
@@ -580,6 +580,16 @@ export class Marker {
                     }
                     if(foundMarker){ //target another marker
                         console.log('attack marker');
+                        selectionModel.all((marker)=>{
+                            const doing = marker.doing;
+                            marker.doing = [];
+                            if(meta.alt){
+                                marker.action(2, worldPoint, {}, treadmill);
+                            }else{
+                                marker.action(1, worldPoint, {}, treadmill);
+                            }
+                            marker.doing = marker.doing.concat(doing);
+                        });
                     }
                 }else{
                     if(foundSubmesh){

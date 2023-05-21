@@ -55,6 +55,7 @@ export class Treadmill {
         //(new Emitter()).onto(this);
         this.scene = scene;
         this.physicalWorld = physicalWorld;
+        scene.physicalWorld = physicalWorld;
         //todo: base on orientation
         this.setTreadmillState([
             [ 'current', 'north' ],

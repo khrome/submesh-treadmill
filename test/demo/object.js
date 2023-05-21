@@ -183,7 +183,7 @@ export class Cube extends MeshObject{
                 const newMarker = marker.spawn(ball, target);
                 const submesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
                 submesh.markers.push(newMarker);
-                marker.addTo(treadmill.scene, null, target, { velocity: 15 })
+                newMarker.addTo(treadmill.scene, null, target, { velocity: 15 })
                 //treadmill.scene.add(newMarker.mesh);
                 
             }
