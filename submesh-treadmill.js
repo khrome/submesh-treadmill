@@ -189,7 +189,7 @@ export class Treadmill {
 
     tick(delta){
         if(this.physicalWorld){
-            this.physicalWorld.step(this.options.timestep || 1/60);
+            this.physicalWorld.step(delta);
         }
         const submeshes = this.activeSubmeshes()
         let submeshIndex = 0;

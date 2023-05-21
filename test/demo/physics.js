@@ -22,6 +22,7 @@ import {
     Vector2,
     Vector3
 } from "three";
+import * as CANNON from 'cannon-es';
 import { DevelopmentTools } from '../../src/development';
 import { Cube } from './object';
 import { SimpleSubmesh } from './submesh';
