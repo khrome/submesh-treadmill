@@ -23,6 +23,7 @@ export class Submesh{
         this.size = Submesh.tileSize;
         this.mesh = this.createMesh(geometry, tilePosition);
         this.body = this.createPhysicalMesh(this.mesh);
+        console.log('subody', this.body)
         if(this.body){
             this.body.markerType = 'submesh';
         }
@@ -83,8 +84,8 @@ export class Submesh{
     addTo(offset, scene, physicalWorld){
         scene.add( this.mesh );
         this.mesh.position.set(offset.x, offset.y, 0);
-        if(this.body && physicalWorld){
-            physicalWorld.addBody(this.body);
+        if(this.body && scene.physicalWorld){
+            scene.physicalWorld.addBody(this.body);
             this.body.position.copy(this.mesh.position)
             this.body.quaternion.copy(this.mesh.quaternion);
         }
@@ -92,7 +93,6 @@ export class Submesh{
         if(this.markers) this.markers.forEach((marker)=>{
             scene.add( marker.mesh );
             if(marker.shadowMesh){
-                console.log('shadow');
                 scene.add( marker.shadowMesh );
             }
             marker.mesh.position.set(

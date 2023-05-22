@@ -108,10 +108,9 @@ export class BouncyBall extends PhysicsProjectile{
         body.addEventListener("collide", (e)=>{
             if(e.contact.sj.body.markerType === 'submesh'){
                 setTimeout(()=>{
-                    marker.remove();
+                    
                 });
             }
-        
         });
         return body;
     }
@@ -166,7 +165,6 @@ export class Cube extends MeshObject{
             },
             interact: (delta, marker, target, options={}, treadmill) => {
                 // create projectile
-                console.log('interact')
                 const ball = new Ball();
                 const worldPoint = treadmill.worldPointFor(target);
                 const newMarker = marker.spawn(ball, target);
@@ -177,7 +175,6 @@ export class Cube extends MeshObject{
             },
             toss: (delta, marker, target, options={}, treadmill) => {
                 // create projectile
-                console.log('toss')
                 const ball = new BouncyBall();
                 const worldPoint = treadmill.worldPointFor(target);
                 const newMarker = marker.spawn(ball, target);
