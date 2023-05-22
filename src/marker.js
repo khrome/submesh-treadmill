@@ -308,9 +308,11 @@ export class Marker {
         let raycaster = null;
         if(target) raycaster = this.lookAt(target);
         if(this.body){
+           console.log('ADD BODY', this.body)
             scene.physicalWorld.addBody(this.body);
             if(target && options.velocity && raycaster){
                 //todo if debug, draw ray
+                console.log('SET VELOCITY', options.velocity);
                 this.body.velocity.set(
                     raycaster.ray.direction.x * options.velocity,
                     raycaster.ray.direction.y * options.velocity,

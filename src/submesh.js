@@ -171,6 +171,19 @@ export class Submesh{
         //todo: for
         if(markers) for(; markerIndex < markers.length; markerIndex++){
             marker = markers[markerIndex];
+            if(marker.mesh.position && marker.body && marker.body.position){
+                console.log('PHYSMODE?', marker.object.physics)
+                if(marker.object && marker.object.physics){
+                    console.log('PHYSMODE')
+                    //physics mode, copy position from body
+                    marker.mesh.position.copy(marker.body.position);
+                    marker.mesh.quaternion.copy(marker.body.quaternion);
+                }else{
+                    //marker mode, copy position to body
+                    marker.body.position.copy(marker.mesh.position);
+                    marker.body.quaternion.copy(marker.mesh.quaternion);
+                }
+            }
             if(marker.destroyed){
                 const index = this.markers.indexOf(marker);
                 if(index !== -1){
@@ -178,18 +191,6 @@ export class Submesh{
                     treadmill.scene.remove(marker.mesh);
                 }else{
                     console.log('tried to remove a marker that doesn\'t exist in this submesh');
-                }
-                if(marker.mesh.position && marker.body && marker.body.position){
-                    if(marker.object && marker.object.physics){
-                        console.log('PHYSMODE')
-                        //physics mode, copy position from body
-                        marker.mesh.position.copy(marker.body.position);
-                        marker.mesh.quaternion.copy(marker.body.quaternion);
-                    }else{
-                        //marker mode, copy position to body
-                        marker.body.position.copy(marker.mesh.position);
-                        marker.body.quaternion.copy(marker.mesh.quaternion);
-                    }
                 }
                 //todo: notify, for parallel removal
             }
