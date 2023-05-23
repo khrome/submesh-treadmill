@@ -172,9 +172,7 @@ export class Submesh{
         if(markers) for(; markerIndex < markers.length; markerIndex++){
             marker = markers[markerIndex];
             if(marker.mesh.position && marker.body && marker.body.position){
-                console.log('PHYSMODE?', marker.object.physics)
                 if(marker.object && marker.object.physics){
-                    console.log('PHYSMODE')
                     //physics mode, copy position from body
                     marker.mesh.position.copy(marker.body.position);
                     marker.mesh.quaternion.copy(marker.body.quaternion);

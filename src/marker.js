@@ -348,6 +348,7 @@ export class Marker {
         const spawnpoint = raycaster.ray.at(outside, target);
         spawnpoint.z += 0.5;
         spawned.mesh.position.copy(spawnpoint);
+        if(spawned.body) spawned.body.position.copy(spawnpoint);
         return spawned;
     }
     

@@ -99,7 +99,7 @@ export class BouncyBall extends PhysicsProjectile{
     
     buildCollisionObject(geometry){
         const body = new CANNON.Body({
-            shape: new CANNON.Sphere(this.options.size),
+            shape: new CANNON.Sphere(this.size),
             mass: 1
         });
         body.markerType = 'projectile';
@@ -178,7 +178,7 @@ export class Cube extends MeshObject{
                 const ball = new BouncyBall();
                 const worldPoint = treadmill.worldPointFor(target);
                 const newMarker = marker.spawn(ball, target);
-                newMarker.body.position.copy(marker.mesh.position);
+                //newMarker.body.position.copy(marker.mesh.position);
                 const submesh = treadmill.submeshAt(marker.mesh.position.x, marker.mesh.position.y);
                 submesh.markers.push(newMarker);
                 newMarker.addTo(treadmill.scene, null, target, { velocity: 15 });
