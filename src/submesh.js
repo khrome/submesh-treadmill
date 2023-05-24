@@ -23,7 +23,6 @@ export class Submesh{
         this.size = Submesh.tileSize;
         this.mesh = this.createMesh(geometry, tilePosition);
         this.body = this.createPhysicalMesh(this.mesh);
-        console.log('subody', this.body)
         if(this.body){
             this.body.markerType = 'submesh';
         }

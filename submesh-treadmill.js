@@ -33,7 +33,6 @@ const debounce_leading = (func, name='default', timeout = 300)=>{
         timers[name] = setTimeout(() => { timers[name] = undefined; }, timeout);
     };
 }
-
 export { Submesh, MeshObject, Marker, Tile, Projectile, PhysicsProjectile };
 
 export class Treadmill {

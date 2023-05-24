@@ -1,5 +1,5 @@
 // Sample usage for vite
-import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill';
+import { Treadmill, Submesh, Marker, MeshObject } from '../../submesh-treadmill.js';
 //import { ShadowMesh } from 'three/addons/objects/ShadowMesh.js';
 import {
     BoxGeometry,
@@ -23,12 +23,12 @@ import {
     Vector3
 } from "three";
 import * as CANNON from 'cannon-es';
-import { DevelopmentTools } from '../../src/development';
-import { Cube } from './object';
-import { SimpleSubmesh } from './submesh';
-import { create as createLights } from './lights';
-import { create as createCamera } from './camera';
-import { create as createRenderer } from './renderer';
+import { DevelopmentTools } from '../../src/development.js';
+import { Cube } from './object.js';
+import { SimpleSubmesh } from './submesh.js';
+import { create as createLights } from './lights.js';
+import { create as createCamera } from './camera.js';
+import { create as createRenderer } from './renderer.js';
 
 const params = new URLSearchParams(window.location.search);
 const debug = params.has('debug');
