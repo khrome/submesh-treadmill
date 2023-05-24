@@ -1,7 +1,7 @@
 submesh-treadmill
 =================
 
-[ ![image](./img/demo.png) ](https://khrome.github.io/submesh-treadmill/)
+[ ![image](https://raw.githubusercontent.com/khrome/submesh-treadmill/master/img/demo.png) ](https://khrome.github.io/submesh-treadmill/)
 
 This is a 3D treadmill built in [Three.js](https://www.npmjs.com/package/three) for navigating through scenes much larger than can fit into memory, it could be used to visualize maps, make a game or visualize a simulation which is compatible with off the shelf physics systems([CANNON.js](https://www.npmjs.com/package/cannon-es)). It also supports (but does not require) browser native modules.
 
@@ -65,7 +65,7 @@ more docs on markers and mesh-objects will come later
 Testing
 -------
 
-![image](./img/test.png)
+![image](https://raw.githubusercontent.com/khrome/submesh-treadmill/master/img/test.png)
 
 Run the tests headless.
 ```bash
