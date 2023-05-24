@@ -22,10 +22,16 @@ A simple example would look like:
         constructor(geometry, tilePosition, options={}){
             super(geometry, tilePosition, options);
         }
+        createMarkers(){
+            return [];
+        }
     }
     const treadmill = new Treadmill({
         createSubmesh: (x, y)=>{
-            const geometry = new PlaneGeometry( tileSize, tileSize, tileSize, tileSize );
+            const geometry = new PlaneGeometry( 
+                tileSize, tileSize, 
+                tileSize, tileSize 
+            );
             //reorient to origin @ ll corner
             geometry.translate( tileSize/2, tileSize/2, 0 );
             return new SimpleSubmesh(geometry, new Vector2(x, y), {
@@ -39,7 +45,7 @@ A simple example would look like:
                     else scene.remove(marker.mesh);
                     if(marker.linked && marker.linked[0] === camera){
                         //if the camera linked marker exits, move the treadmill
-                        treadmill.moveDirection(action);
+                        treadmill.moveDirection(direction);
                     };
                 }
             });
@@ -48,7 +54,7 @@ A simple example would look like:
     }, threeJsScene);
     // setup lights, camera, skybox, etc here
     // show loading here
-    await treadmill.ready();
+    await treadmill.loaded;
     // reveal game here
     renderer.setAnimationLoop(() => {
         const delta = threeJsClock.getDelta();
