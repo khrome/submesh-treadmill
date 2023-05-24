@@ -198,7 +198,7 @@
       };
       window.myIframe = window['simple-iframe'];
       console.log(document.getElementById("viz"));
-      window.addEventListener("keydown", function(evt) { myIframe.handleKey(evt); });
+      window.addEventListener("keydown", function(evt) { myIframe && myIframe.handleKey(evt) });
       //window.addEventListener("click", function(evt) { myIframe.dispatchEvent(evt); });
       //window.addEventListener("mousemove", function(evt) { myIframe.dispatchEvent(evt); });
       //window.addEventListener("contextmenu", function(evt) { myIframe.dispatchEvent(evt); });

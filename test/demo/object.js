@@ -211,7 +211,7 @@ export class Cube extends MeshObject{
             );
         }
         if(window.tools){ //TODO: make these work
-            console.log('added axes');
+            //console.log('added axes');
             const offset = mesh.position.clone();
             offset.x -= .002;
             offset.y -= .002;
