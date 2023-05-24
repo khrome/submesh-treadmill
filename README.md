@@ -20,7 +20,7 @@ TBD (check the tests)
 Testing
 -------
 
-[ ![image](./img/test.png) ](https://khrome.github.io/submesh-treadmill/test/test.html)
+![image](./img/test.png)
 
 Run the tests headless.
 ```bash
