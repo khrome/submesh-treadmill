@@ -36,15 +36,15 @@ A simple example would look like:
             geometry.translate( tileSize/2, tileSize/2, 0 );
             return new SimpleSubmesh(geometry, new Vector2(x, y), {
                 onMarkerExit : (marker, submesh, direction)=>{
-                    //when markers leave, see if they belong in a different submesh
+                    //when markers leave, check their submesh
                     const newSubmesh = treadmill.submeshAt(
                         marker.mesh.position.x, 
                         marker.mesh.position.y
                     );
                     if(newSubmesh) newSubmesh.markers.push(marker);
-                    else scene.remove(marker.mesh);
-                    if(marker.linked && marker.linked[0] === camera){
-                        //if the camera linked marker exits, move the treadmill
+                    else threeJsScene.remove(marker.mesh);
+                    if(marker.linked && marker.linked[0] === threeJsCamera){
+                        //if camera linked marker exits, move treadmill
                         treadmill.moveDirection(direction);
                     };
                 }
@@ -62,7 +62,7 @@ A simple example would look like:
         //update other game objects
     }, 100);
     
-    //then later you can shift the treadmill 1 tile northward with
+    //later: shift the treadmill 1 tile northward
     treadmill.moveDirection('north');
 ```
 

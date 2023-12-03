@@ -26,7 +26,7 @@ export class Submesh{
         if(this.body){
             this.body.markerType = 'submesh';
         }
-        this.markers = this.createMarkers() || [];
+        if(!options.async) this.markers = this.createMarkers() || [];
     }
 
     createMesh(geometry){
