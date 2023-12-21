@@ -174,7 +174,10 @@ export class Treadmill {
     
     activeMarkers(types, submeshes = this.activeSubmeshes()){
         const allMarkers = submeshes.reduce((agg, item)=>{
-            return agg.concat(item.markers);
+            //be forgiving about missing submeshes
+            let result = agg;
+            if(item) result = agg.concat(item.markers);
+            return result;
         }, []);
         if(types){
             const isSelectableMarker = isMarkerOfTypeGenerator(types);
