@@ -33,6 +33,8 @@ const debounce_leading = (func, name='default', timeout = 300)=>{
         timers[name] = setTimeout(() => { timers[name] = undefined; }, timeout);
     };
 }
+
+const allPositions = [ 'current', 'north', 'northeast', 'northwest', 'east', 'west', 'southeast', 'south', 'southwest'];
 export { Submesh, MeshObject, Marker, Tile, Projectile, PhysicsProjectile };
 
 export class Treadmill {
@@ -162,6 +164,18 @@ export class Treadmill {
         copy.x = copy.x - this.x * Submesh.tileSize;
         copy.y = copy.y - this.y * Submesh.tileSize;
         return copy;
+    }
+    
+    submeshPointFor(worldPoint){
+        const submesh = this.submeshAt(worldPoint.x, worldPoint.y);
+        const copy = worldPoint.clone();
+        copy.x = copy.x % Submesh.tileSize;
+        copy.y = copy.y % Submesh.tileSize;
+        return copy;
+    }
+    
+    worldPointForMarker(marker){
+        return this.worldPointFor(marker.mesh.position);
     }
 
     activeSubmeshes(){

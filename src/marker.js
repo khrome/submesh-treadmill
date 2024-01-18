@@ -308,11 +308,9 @@ export class Marker {
         let raycaster = null;
         if(target) raycaster = this.lookAt(target);
         if(this.body){
-           console.log('ADD BODY', this.body)
             scene.physicalWorld.addBody(this.body);
             if(target && options.velocity && raycaster){
                 //todo if debug, draw ray
-                console.log('SET VELOCITY', options.velocity);
                 this.body.velocity.set(
                     raycaster.ray.direction.x * options.velocity,
                     raycaster.ray.direction.y * options.velocity,
@@ -446,6 +444,7 @@ export class Marker {
         onDeselect,
         onMouseOver,
         onMouseAway,
+        isSelectable,
         markerTypes=[] 
     }){
         let selected = [];
@@ -595,9 +594,18 @@ export class Marker {
                         });
                     }
                 }else{
-                    if(foundSubmesh){
-                        const point = intersects[0].point;
-                        const worldPoint = treadmill.worldPointFor(point);
+                    const point = intersects[0].point; //position in scene from central mesh origin
+                    const worldPoint = treadmill.worldPointFor(point); //absolute position
+                    const localPoint = treadmill.submeshPointFor(worldPoint); //position in submesh it targets
+                    const sb = treadmill.submeshAt(point.x, point.y);
+                    if(
+                        foundSubmesh &&
+                        (
+                           (
+                               isSelectable && isSelectable(sb, point, worldPoint, localPoint)
+                           ) || !isSelectable
+                        )
+                    ){
                         selectionModel.all((marker)=>{
                             const markerPoint = marker.mesh.position;
                             const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
