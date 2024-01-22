@@ -17,7 +17,7 @@ const isMarkerOfTypeGenerator = (markerTypes)=>{
     return (instance)=>{
         return markerTypes.reduce((isA, thisType)=>{
             return isA || instance.object instanceof thisType;
-        }, false)
+        }, false);
     };
 };
 
@@ -53,6 +53,10 @@ export class Treadmill {
     }
     constructor(options={}, scene, physicalWorld) {
         this.options = options;
+        this.pathfind = options.pathfind || ((origin, target)=>{
+            //TODO
+            console.log('pathfind', origin, target);
+        });
         //(new Emitter()).onto(this);
         this.scene = scene;
         this.physicalWorld = physicalWorld;
@@ -91,13 +95,14 @@ export class Treadmill {
 
     addMarker(marker, x, y, z){ //world coords
         const local = this.treadmillPointFor(new Vector3(x, y, z)); //y refers to current
-        const submesh = this.submeshAt(local.x, local.y);
+        return this.addMarkerToStage(marker, local.x, local.y, local.z);
+        /*const submesh = this.submeshAt(local.x, local.y);
         if(submesh){
             marker.addTo(this.scene, new Vector3(local.x, local.y, z || this.getHeightAt(local.x, local.y)));
             submesh.markers.push(marker);
         }else{
             console.log('this marker is off the stage', marker, x, y, z);
-        }
+        } //*/
     }
     
     addMarkerToStage(marker, x, y, z){ //treadmill coords coords: -16 - 32
@@ -105,6 +110,8 @@ export class Treadmill {
         if(submesh){
             marker.addTo(this.scene, new Vector3(x, y, z || this.getHeightAt(x, y)));
             submesh.markers.push(marker);
+        }else{
+            console.log('this marker is off the stage', marker, x, y, z);
         }
     }
 
@@ -114,9 +121,9 @@ export class Treadmill {
     
     submeshCellAt(x, y){
         let location = '';
-        if(y > 16) location += 'north';
+        if(y >= 16) location += 'north';
         if(y < 0) location += 'south';
-        if(x > 16) location += 'east';
+        if(x >= 16) location += 'east';
         if(x < 0) location += 'west';
         return location || 'current';
     }

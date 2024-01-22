@@ -65,6 +65,7 @@ export class Marker {
         this.active = true; //todo: only if npc
         this.original = this.object.defaultValues();
         this.values = JSON.parse(JSON.stringify(this.original));
+        this.treadmill = options.treadmill;
         this.doing = [];
         this.allInfo = ()=>{
             return Object.assign({}, this.object.options, this.options, this.values);
@@ -93,7 +94,15 @@ export class Marker {
                     0
                 );
             }
-        } */
+        } //*/
+    }
+    
+    nearbyMarkers(types, distance){
+        const active = this.object.treadmill.activeMarkers(types);
+        return active.filter((marker)=>{
+            return (marker.mesh.position.distanceTo(this.mesh.position) <= distance) &&
+                this !== marker;
+        });
     }
 
     //static emitter = new Emitter(); //common channel for all markers
@@ -617,6 +626,7 @@ export class Marker {
                                 marker.doing = [];
                             }
                             marker.action('moveTo', worldPoint, {}, treadmill);
+                            //marker.action('pathTo', worldPoint, {}, treadmill);
                         });
                     }
                     if(foundMarker){

@@ -1,6 +1,6 @@
 {
     "name": "submesh-treadmill",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "main": "submesh-treadmill.js",
     "type": "module",
     "keywords": [
