@@ -1,33 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treadmill Demo</title>
-    <link rel="stylesheet" href="./style.css">
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "http://localhost:8000/node_modules/three/build/three.module.js",
-                "chai": "http://localhost:8000/node_modules/chai/chai.js",
-                "sift": "http://localhost:8000/node_modules/sift/es5m/index.js",
-                "stats.js": "http://localhost:8000/node_modules/stats.js/src/Stats.js",
-                "dat.gui": "http://localhost:8000/node_modules/dat.gui/src/dat/index.js",
-                "three-spritetext": "http://localhost:8000/node_modules/three-spritetext/dist/three-spritetext.mjs",
-                "bitwise-logger": "http://localhost:8000/node_modules/bitwise-logger/bitwise-logger.js",
-                "cannon-es": "http://localhost:8000/node_modules/cannon-es/dist/cannon-es.js",
-                "extended-emitter-es6": "http://localhost:8000/node_modules/extended-emitter-es6/extended-emitter-es6.js",
-                "three/addons/controls/OrbitControls.js": "http://localhost:8000/node_modules/three/examples/jsm/controls/OrbitControls.js",
-                "three/addons/geometries/TextGeometry.js":"http://localhost:8000/node_modules/three/examples/jsm/geometries/TextGeometry.js",
-                "module": "http://localhost:8000/test/safe-emitter.js",
-                "node:events": "http://localhost:8000/test/safe-emitter.js"
+    <head>
+        <meta charset="UTF-8">
+        <link rel="icon" href="/favicon.ico">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Treadmill Demo</title>
+        <link rel="stylesheet" href="./style.css">
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "marker-engine": "/node_modules/marker-engine/src/index.mjs",
+                    "chai": "/node_modules/chai/chai.js",
+                    "sift": "/node_modules/sift/es5m/index.js",
+                    "stats.js": "/node_modules/stats.js/src/Stats.js",
+                    "dat.gui": "/node_modules/dat.gui/src/dat/index.js",
+                    "three-spritetext": "/node_modules/three-spritetext/dist/three-spritetext.mjs",
+                    "bitwise-logger": "/node_modules/bitwise-logger/bitwise-logger.js",
+                    "cannon-es": "/node_modules/cannon-es/dist/cannon-es.js",
+                    "extended-emitter-es6": "/node_modules/extended-emitter-es6/extended-emitter-es6.js",
+                    "three/addons/controls/OrbitControls.js": "/node_modules/three/examples/jsm/controls/OrbitControls.js",
+                    "three/addons/geometries/TextGeometry.js":"/node_modules/three/examples/jsm/geometries/TextGeometry.js",
+                    "module": "/test/safe-emitter.js",
+                    "extended-emitter": "/node_modules/extended-emitter/./extended-emitter.mjs",
+                    "browser-or-node": "/node_modules/browser-or-node/src/index.js",
+                    "three/examples/jsm/loaders/FBXLoader":"/node_modules/three/examples/jsm/loaders/FBXLoader.js",
+                    "node:events": "/node_modules/extended-emitter/node-events.mjs"
+                }
             }
-        }
-    </script>
-  </head>
-  <body>
-    <div class="game-world"></div>
-    <script type="module" src="./physics.js"></script>
-  </body>
+        </script>
+        <style>
+            .game-world{
+                width: 100vw;
+                height: 100vh;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="game-world"></div>
+        <script type="module">
+            import { Treadmill, Marker } from '../../submesh-treadmill.mjs';
+            (async ()=>{
+                const treadmill = new Treadmill({
+                    voxelFile: '/src/submesh-voxels.mjs',
+                    container: '.game-world',
+                    debug: true
+                });
+                await treadmill.preload([Marker]);
+                const avatar = new Marker({
+                    id : 'player-avatar',
+                    meshAttached: true,
+                    values: {
+                        movementSpeed: 5
+                    }
+                });
+                treadmill.addMarker(avatar);
+                treadmill.focusOn(avatar);
+                treadmill.start();
+            })();
+        </script>
+    </body>
 </html>
