@@ -1,7 +1,7 @@
 import {
     PerspectiveCamera
-} from "three";
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+} from "../node_modules/three/build/three.module.js";
+import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 
 export const create = (options={})=>{
     let ratio = options.aspectRatio;

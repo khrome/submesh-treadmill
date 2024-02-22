@@ -40,6 +40,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@environment-safe/esm-worker": "^0.0.2",
         "bitwise-logger": "^0.0.4",
         "cannon-es": "^0.20.0",
         "dat.gui": "^0.7.9",

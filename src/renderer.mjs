@@ -1,7 +1,7 @@
 import {
     WebGLRenderer,
     BasicShadowMap
-} from "three";
+} from "../node_modules/three/build/three.module.js";
 
 export const create = (options={})=>{
     let currentLoop = null

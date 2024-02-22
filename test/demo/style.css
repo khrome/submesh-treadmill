@@ -18,6 +18,12 @@ body{
     right:0px;
     z-index: -1;
 }
+iframe{
+    position: absolute; 
+    width:0; 
+    height:0; 
+    border:0;
+}
 table.keys td{
     height: 40px
 }

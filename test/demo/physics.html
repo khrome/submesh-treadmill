@@ -11,8 +11,12 @@
                 "imports": {
                     "three": "/node_modules/three/build/three.module.js",
                     "marker-engine": "/node_modules/marker-engine/src/index.mjs",
+                    "submesh-treadmill": "/submesh-treadmill.mjs",
                     "chai": "/node_modules/chai/chai.js",
                     "sift": "/node_modules/sift/es5m/index.js",
+                    "@environment-safe/esm-worker":"/node_modules/@environment-safe/esm-worker/src/index.mjs",
+                    "bitwise-logger":"/node_modules/bitwise-logger/bitwise-logger.js",
+                    "bitwise-logger/src/console.js":"/node_modules/bitwise-logger/src/console.js",
                     "stats.js": "/node_modules/stats.js/src/Stats.js",
                     "dat.gui": "/node_modules/dat.gui/src/dat/index.js",
                     "three-spritetext": "/node_modules/three-spritetext/dist/three-spritetext.mjs",
@@ -39,7 +43,7 @@
     <body>
         <div class="game-world"></div>
         <script type="module">
-            import { Treadmill, Marker } from '../../submesh-treadmill.mjs';
+            import { Treadmill, Marker } from 'submesh-treadmill';
             (async ()=>{
                 const treadmill = new Treadmill({
                     voxelFile: '/src/submesh-voxels.mjs',
@@ -50,6 +54,10 @@
                 const avatar = new Marker({
                     id : 'player-avatar',
                     meshAttached: true,
+                    position:{
+                        x: 5,
+                        y: 5,
+                    },
                     values: {
                         movementSpeed: 5
                     }

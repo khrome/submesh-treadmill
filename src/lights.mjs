@@ -4,7 +4,7 @@ import {
     AmbientLight,
     SpotLight,
     Vector3
-} from "three";
+} from "../node_modules/three/build/three.module.js";
 
 export const create = (options={})=>{
     const results = {};

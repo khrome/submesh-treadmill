@@ -7,7 +7,7 @@ import {
     Scenery as MEScenery, 
     Monster as MEMonster,
     tools, enable
-} from 'marker-engine';
+} from './node_modules/marker-engine/src/index.mjs';
 import { 
     Scene,
     PlaneGeometry,
@@ -15,8 +15,8 @@ import {
     Vector3,
     Color,
     MeshPhongMaterial
-} from 'three';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+} from './node_modules/three/build/three.module.js';
+import { FBXLoader } from './node_modules/three/examples/jsm/loaders/FBXLoader.js';
 import { create as createLights } from './src/lights.mjs';
 import { create as createCamera } from './src/camera.mjs';
 import { create as createRenderer } from './src/renderer.mjs';
