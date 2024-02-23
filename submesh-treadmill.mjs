@@ -7,19 +7,21 @@ import {
     Scenery as MEScenery, 
     Monster as MEMonster,
     tools, enable
-} from './node_modules/marker-engine/src/index.mjs';
+} from 'marker-engine';
 import { 
     Scene,
     PlaneGeometry,
+    Raycaster,
     Mesh,
     Vector3,
     Color,
     MeshPhongMaterial
-} from './node_modules/three/build/three.module.js';
-import { FBXLoader } from './node_modules/three/examples/jsm/loaders/FBXLoader.js';
+} from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { create as createLights } from './src/lights.mjs';
 import { create as createCamera } from './src/camera.mjs';
 import { create as createRenderer } from './src/renderer.mjs';
+import { enableSelection } from './src/selection.mjs';
 
 const preloadFBX = async (model, options={})=>{
     const fbxLoader = new FBXLoader()
@@ -177,6 +179,7 @@ export class Monster extends MEMonster{
 
 export class Treadmill {
     constructor(options={}){
+        this.markerTypes = options.markerTypes || [Marker];
         this.engine = new MarkerEngine({
             voxelFile: options.voxelFile || '/voxels.mjs'
         });
@@ -210,6 +213,43 @@ export class Treadmill {
                 this.scene
             );
         }
+        
+        const selection = enableSelection({ 
+            container: this.container, 
+            camera: this.camera, 
+            renderer:this.renderer, 
+            treadmill: this,
+            onMouseOver: (marker)=>{
+                console.log('mouseover', marker);
+                /*
+                if(marker.mesh.highlightedOutline && !selection.contains(marker)){
+                    marker.mesh.highlightedOutline.position.copy(marker.mesh.position);
+                    scene.add(marker.mesh.highlightedOutline);
+                } //*/
+            },
+            onMouseAway: (marker)=>{
+                /*
+                if(marker.mesh.highlightedOutline && !selection.contains(marker)){
+                    scene.remove(marker.mesh.highlightedOutline);
+                } //*/
+            },
+            onSelect: (marker)=>{
+                console.log('select', marker);
+                /*if(marker.mesh.selectedOutline){
+                    marker.mesh.selectedOutline.position.copy(marker.mesh.position);
+                    scene.add(marker.mesh.selectedOutline);
+                } //*/
+            },
+            onDeselect: (marker)=>{
+                /*
+                if(marker.mesh.selectedOutline){
+                    console.log('deselect', marker);
+                    scene.remove(marker.mesh.selectedOutline);
+                } //*/
+            },
+            markerTypes: this.markerTypes
+        });
+        
         if(options.debug) enable({ 
             scene:this.scene, 
             renderer: this.renderer, 
@@ -221,6 +261,7 @@ export class Treadmill {
     attachTo(container, camera, renderer, scene){
         const el = typeof container === 'string'?document.querySelector(container):container;
         el.appendChild(renderer.domElement);
+        this.container = el;
         const setSize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -231,6 +272,20 @@ export class Treadmill {
         window.addEventListener('resize', () => {
             setSize();
             renderer.render(scene, camera);
+        });
+    }
+    
+    activeSubmeshes(){
+        Object.keys(this.engine.submeshes).map((key)=>{
+            return this.engine.submeshes[key];
+        })
+    }
+    
+    activeMarkers(markerTypes){
+        return this.engine.markers.filter((marker)=>{
+            return markerTypes.reduce((agg, type)=>{
+                return agg || marker instanceof type;
+            }, false);
         });
     }
     
@@ -280,6 +335,7 @@ export class Treadmill {
         this.engine.on('create-markers', (markers)=>{
             markers.forEach((model)=>{
                 model.model();
+                this.engine.markers.push(model);
                 this.scene.add(model.mesh);
             });
         });
