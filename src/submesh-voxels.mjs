@@ -17,7 +17,6 @@ export const markers = (x, y, depth, options={})=>{
     const yDigits = Math.abs(y).toString().split('').map((chr)=>parseInt(chr));
     let yPos = 2;
     let xPos = 2;
-    console.log('??', x, y, xDigits, yDigits)
     for(let position = 0; position < xDigits.length; position++){
         xPos = 2;
         for(let count = 0; count < xDigits[position]; count++){
@@ -37,7 +36,7 @@ export const markers = (x, y, depth, options={})=>{
     yPos += 2;
     for(let position = 0; position < yDigits.length; position++){
         xPos = 2;
-        for(let count = 0; count < xDigits[position]; count++){
+        for(let count = 0; count < yDigits[position]; count++){
             markers.push(new Marker({
                 id : randomId(),
                 meshAttached: true,

@@ -181,7 +181,6 @@ export class Treadmill {
             voxelFile: options.voxelFile || '/voxels.mjs'
         });
         this.renderer = options.renderer || createRenderer(options.renderOptions);
-        console.log('REN', this.renderer)
         const { camera, controls } = options.camera || createCamera(options.cameraOptions || {
             type: 'orbital',
             dom: this.renderer.domElement,
@@ -276,6 +275,13 @@ export class Treadmill {
             tool.sceneAxes(new Vector3(-16, 16, 0), 2);
             tool.sceneAxes(new Vector3(0, 16, 0), 2);
             tool.sceneAxes(new Vector3(16, 0, 0), 2);
+        });
+        
+        this.engine.on('create-markers', (markers)=>{
+            markers.forEach((model)=>{
+                model.model();
+                this.scene.add(model.mesh);
+            });
         });
         
         this.engine.on('state', (data)=>{
