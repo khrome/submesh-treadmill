@@ -1,11 +1,6 @@
 import { 
     MarkerEngine, 
-    Submesh, 
-    Marker as MEMarker, 
-    Projectile as MEProjectile, 
-    PhysicsProjectile as MEPhysicsProjectile, 
-    Scenery as MEScenery, 
-    Monster as MEMonster,
+    Submesh,
     tools, enable
 } from 'marker-engine';
 import { 
@@ -22,34 +17,17 @@ import { create as createLights } from './src/lights.mjs';
 import { create as createCamera } from './src/camera.mjs';
 import { create as createRenderer } from './src/renderer.mjs';
 import { enableSelection } from './src/selection.mjs';
+import { Emitter } from 'extended-emitter';
 
-const preloadFBX = async (model, options={})=>{
-    const fbxLoader = new FBXLoader()
-    return await new Promise((resolve, reject)=>{
-        fbxLoader.load(
-            model,
-            (object) => {
-                object.traverse((child)=>{
-                    if(child.isMesh){
-                        //child.rotation.x += 1.5;
-                        //child.scale.set(.01, .01, .01)
-                        //child.matrix.makeRotationX(1.5)
-                    }
-                })
-                //object.scale.set(.01, .01, .01)
-                //object.makeRotationX(1.5)
-                //object.rotation.x += 1.5;
-                resolve(object);
-            },
-            (xhr) => {
-                //console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-            },
-            (error) => {
-                reject(error)
-            }
-        );
-    });
-}
+import { Marker } from './src/marker.mjs';
+import { Projectile } from './src/projectile.mjs';
+import { PhysicsProjectile } from './src/physics-projectile.mjs';
+import { Scenery } from './src/scenery.mjs';
+import { Monster } from './src/monster.mjs';
+import { allMarkers } from './src/preload-fbx.mjs';
+export const Entity = Monster;
+
+export { Marker, Projectile, PhysicsProjectile, Scenery, Monster };
 
 const createScene = ()=>{
     const scene = new Scene();
@@ -57,131 +35,11 @@ const createScene = ()=>{
     return scene;
 };
 
-export const allProjectileTypes = [];
-export const allPhysicsProjectileTypes = [];
-export const allSceneryTypes = [];
-export const allMonsterTypes = [];
-const customMarkerTypes = [];
-let everyMarkerType = null;
-let markerTypesDirty = true;
-
-export const allMarkerTypes = ()=>{
-    if(markersDirty){
-        markersDirty = [
-            ...allProjectileTypes, 
-            ...allPhysicsProjectileTypes, 
-            ...allSceneryTypes, 
-            ...allMonsterTypes,
-            ...customMarkerTypes
-        ];
-        markersDirty = false;
-    }
-    return markersDirty;
-}
-
-
-export const allProjectiles = [];
-export const allPhysicsProjectiles = [];
-export const allScenery = [];
-export const allMonsters = [];
-const customMarkers = [];
-let everyMarker = null;
-let markersDirty = true;
-
-export const allMarkers = ()=>{
-    if(markersDirty){
-        markersDirty = [
-            ...allProjectiles, 
-            ...allPhysicsProjectiles, 
-            ...allScenery, 
-            ...allMonsters,
-            ...customMarkers
-        ];
-        markersDirty = false;
-    }
-    return markersDirty;
-}
-
-export class Marker extends MEMarker{
-    static model = null;
-    static modelFile = null;
-    static async preload(modelPath){
-        const modelLocation = modelPath || this.modelFile;
-        if(modelLocation) this.model = await preloadFBX(modelLocation);
-        customMarkerTypes.push(this);
-        markersDirty = true;
-    }
-    constructor(options={}){
-        super(options);
-        customMarkers.push(this);
-    }
-}
-
-export class Projectile extends MEProjectile{
-    static model = null;
-    static modelFile = null;
-    static async preload(modelPath){
-        const modelLocation = modelPath || this.modelFile;
-        if(modelLocation) this.model = await preloadFBX(modelLocation);
-        allProjectileTypes.push(this);
-        markersDirty = true;
-    }
-    constructor(options={}){
-        super(options);
-        allProjectiles.push(this);
-    }
-}
-
-export class PhysicsProjectile extends MEPhysicsProjectile{
-    static model = null;
-    static modelFile = null;
-    static async preload(modelPath){
-        const modelLocation = modelPath || this.modelFile;
-        if(modelLocation) this.model = await preloadFBX(modelLocation);
-        allPhysicsProjectileTypes.push(this);
-        markersDirty = true;
-    }
-    constructor(options={}){
-        super(options);
-        allPhysicsProjectiles.push(this);
-    }
-}
-
-export class Scenery extends MEScenery{
-    static model = null;
-    static modelFile = null;
-    static async preload(modelPath){
-        const modelLocation = modelPath || this.modelFile;
-        if(modelLocation) this.model = await preloadFBX(modelLocation);
-        allSceneryTypes.push(this);
-        markersDirty = true;
-    }
-    constructor(options={}){
-        super(options);
-        allScenery.push(this);
-    }
-}
-
-export class Monster extends MEMonster{
-    static model = null;
-    static modelFile = null;
-    static async preload(modelPath){
-        const modelLocation = modelPath || this.modelFile;
-        if(modelLocation) this.model = await preloadFBX(modelLocation);
-        allMonsterTypes.push(this);
-        markersDirty = true;
-    }
-    constructor(options={}){
-        super(options);
-        allMonsters.push(this);
-    }
-}
-
 export class Treadmill {
     constructor(options={}){
-        this.markerTypes = options.markerTypes || [Marker];
         this.engine = new MarkerEngine({
-            voxelFile: options.voxelFile || '/voxels.mjs'
+            voxelFile: options.voxelFile || '/voxels.mjs',
+            markerTypesFile: options.markerTypesFile || [Marker]
         });
         this.renderer = options.renderer || createRenderer(options.renderOptions);
         const { camera, controls } = options.camera || createCamera(options.cameraOptions || {
@@ -189,6 +47,7 @@ export class Treadmill {
             dom: this.renderer.domElement,
             aspectRatio: (window.innerWidth / window.innerHeight)
         });
+        (new Emitter()).onto(this);
         this.camera = camera;
         this.controls = controls;
         controls.update();
@@ -234,19 +93,22 @@ export class Treadmill {
                 } //*/
             },
             onSelect: (marker)=>{
-                console.log('select', marker);
-                /*if(marker.mesh.selectedOutline){
-                    marker.mesh.selectedOutline.position.copy(marker.mesh.position);
-                    scene.add(marker.mesh.selectedOutline);
-                } //*/
+                selection.add(marker);
+                //this.emit('selection', selection.items());
+                if(marker.selectionMesh){
+                    this.scene.add(marker.selectionMesh);
+                    marker.selectionMesh.quaternion.copy(marker.mesh.quaternion);
+                    marker.selectionMesh.position.copy(marker.mesh.position);
+                }
             },
             onDeselect: (marker)=>{
-                /*
-                if(marker.mesh.selectedOutline){
-                    console.log('deselect', marker);
-                    scene.remove(marker.mesh.selectedOutline);
-                } //*/
+                if(marker.selectionMesh){
+                    this.scene.remove(marker.selectionMesh);
+                }
             },
+            /*isSelectable: (marker)=>{
+                return true;
+            }, //*/
             markerTypes: this.markerTypes
         });
         
@@ -276,7 +138,7 @@ export class Treadmill {
     }
     
     activeSubmeshes(){
-        Object.keys(this.engine.submeshes).map((key)=>{
+        return Object.keys(this.engine.submeshes).map((key)=>{
             return this.engine.submeshes[key];
         })
     }
@@ -291,7 +153,7 @@ export class Treadmill {
     
     addMarker(marker){
         this.engine.addMarker(marker);
-        this.scene.add(marker.model());
+        this.scene.add(marker.mesh || marker.model());
         tools((tool)=>{
             tool.axes(marker.position)
         });
@@ -301,13 +163,14 @@ export class Treadmill {
         this.engine.focusOn(marker);
     }
     
-    async preload(markerTypes){
-        const loadables = [];
-        markerTypes.forEach((Type)=>{
-            loadables.push(Type.preload());
+    async preload(tlMarkerTypes){
+        await this.engine.initialize(async (markerTypes)=>{
+            const loadables = [];
+            (tlMarkerTypes  || markerTypes).forEach((Type)=>{
+                loadables.push(Type.preload());
+            });
+            await Promise.all(loadables);
         });
-        await Promise.all(loadables);
-        await this.engine.initialize();
     }
     
     start(turnHandler){
@@ -333,10 +196,13 @@ export class Treadmill {
         });
         
         this.engine.on('create-markers', (markers)=>{
-            markers.forEach((model)=>{
-                model.model();
-                this.engine.markers.push(model);
-                this.scene.add(model.mesh);
+            markers.forEach((marker)=>{
+                marker.engine = this.engine;
+                marker.model();
+                marker.selection();
+                this.addMarker(marker)
+                //this.engine.markers.push(marker);
+                //this.scene.add(marker.mesh);
             });
         });
         
@@ -352,6 +218,15 @@ export class Treadmill {
                         existingMarker.mesh.quaternion.y = changedMarker.quaternion.y;
                         existingMarker.mesh.quaternion.z = changedMarker.quaternion.z;
                         existingMarker.mesh.quaternion.w = changedMarker.quaternion.w;
+                        if(existingMarker.selectionMesh){
+                            existingMarker.selectionMesh.position.x = changedMarker.position.x;
+                            existingMarker.selectionMesh.position.y = changedMarker.position.y;
+                            existingMarker.selectionMesh.position.z = changedMarker.position.z;
+                            existingMarker.selectionMesh.quaternion.x = changedMarker.quaternion.x;
+                            existingMarker.selectionMesh.quaternion.y = changedMarker.quaternion.y;
+                            existingMarker.selectionMesh.quaternion.z = changedMarker.quaternion.z;
+                            existingMarker.selectionMesh.quaternion.w = changedMarker.quaternion.w;
+                        }
                     }
                 });
             });

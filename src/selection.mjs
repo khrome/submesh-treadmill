@@ -8,6 +8,8 @@ import {
     MeshPhongMaterial
 } from 'three';
 
+import { tools } from 'marker-engine';
+
 const firstNodeWithGeometryInTree = (node)=>{
     let currentNode = node;
     while(currentNode && !currentNode.geometry){
@@ -25,6 +27,7 @@ export const enableSelection = ({
     onDeselect,
     onMouseOver,
     onMouseAway,
+    onClick,
     isSelectable,
     markerTypes=[] 
 })=>{
@@ -46,7 +49,9 @@ export const enableSelection = ({
             }
         },
         clear : ()=>{
-            while(selected.length) selectionModel.remove(selected[selected.length-1]);
+            while(selected.length){
+                selectionModel.remove(selected[selected.length-1]);
+            }
         },
         all : (action)=>{
             //todo: support object actions, which are actual marker actions
@@ -60,6 +65,7 @@ export const enableSelection = ({
         }
     };
     container.addEventListener('keydown', (event)=>{
+        console.log(event)
         const metaIndex = metalist.indexOf(event.code.replace('Left', '').replace('Right', ''));
         if(metaIndex !== -1){
             meta[metalist[metaIndex].toLowerCase()] = true;
@@ -81,12 +87,11 @@ export const enableSelection = ({
         var intersects = null;
         try{ //can't do this mid-load
             // todo: optionally support markers, filtered by type
-            console.log('M?', treadmill.engine.markers)
             intersects = raycaster.intersectObjects( 
                 treadmill.engine.markers.map((marker)=>marker.mesh), 
                 true 
             );
-        }catch(ex){console.log(ex) }
+        }catch(ex){ console.log(ex) }
         /*if(lastOutline){
             treadmill.scene.remove(lastOutline);
         }*/
@@ -120,6 +125,7 @@ export const enableSelection = ({
         }
     });
     const clickHandler = (event)=>{
+        console.log('CLICK!!')
         var raycaster = new Raycaster(); // create once
         var mouse = new Vector2(); // create once
     
@@ -133,12 +139,16 @@ export const enableSelection = ({
         var intersects = null;
         try{ //can't do this mid-load
             //todo: optionally support markers, filtered by type
-            intersects = raycaster.intersectObjects( 
-                submeshes.map((submesh)=> submesh.mesh ).concat(markers.map((marker)=> marker.mesh )), 
+            intersects = raycaster.intersectObjects(
+                [
+                    ...submeshes.map((submesh)=> submesh.mesh ),
+                    ...markers.map((marker)=> marker.mesh )
+                ], 
                 true 
             );
-        }catch(ex){}
-        console.log('I', intersects, markers)
+        }catch(ex){
+            console.log(ex)
+        }
         if(intersects && intersects[0]){
             const foundSubmesh = submeshes.find((submesh)=>{ return submesh.mesh == intersects[0].object});
             const foundMarker = markers.find((marker)=>{ return firstNodeWithGeometryInTree(marker.mesh) == intersects[0].object});
@@ -149,17 +159,14 @@ export const enableSelection = ({
                     selectionModel.all((marker)=>{
                         const markerPoint = marker.mesh.position;
                         const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
-                        if(window.tools){
-                            window.tools.showPoint(point, 'local-action', '#FF0000');
-                            window.tools.showPoint(worldPoint, 'world-action', '#990000');
-                        }
-                        if(!meta.shift){
-                            marker.doing = [];
-                        }
-                        if(meta.alt){
-                           marker.action(2, worldPoint, {}, treadmill);
+                        tools((tool)=>{
+                            tool.showPoint(point, 'local-action', '#FF0000');
+                            tool.showPoint(worldPoint, 'world-action', '#990000');
+                        });
+                        if(event.altKey){
+                           //marker.action(2, worldPoint, {}, treadmill);
                         }else{
-                           marker.action(1, worldPoint, {}, treadmill);
+                           //marker.action(1, worldPoint, {}, treadmill);
                         }
                     });
                 }
@@ -168,7 +175,7 @@ export const enableSelection = ({
                     selectionModel.all((marker)=>{
                         const doing = marker.doing;
                         marker.doing = [];
-                        if(meta.alt){
+                        if(event.altKey){
                             marker.action(2, worldPoint, {}, treadmill);
                         }else{
                             marker.action(1, worldPoint, {}, treadmill);
@@ -178,9 +185,10 @@ export const enableSelection = ({
                 }
             }else{
                 const point = intersects[0].point; //position in scene from central mesh origin
-                const worldPoint = treadmill.worldPointFor(point); //absolute position
-                const localPoint = treadmill.submeshPointFor(worldPoint); //position in submesh it targets
-                const sb = treadmill.submeshAt(point.x, point.y);
+                const worldPoint = treadmill.engine.worldPositionFor(point); //absolute position
+                console.log('%%', worldPoint, point);
+                const localPoint = treadmill.engine.localPositionFor(worldPoint); //position in submesh it targets
+                const sb = treadmill.engine.getSubmeshAt(point.x, point.y);
                 if(
                     foundSubmesh &&
                     (
@@ -189,24 +197,24 @@ export const enableSelection = ({
                        ) || !isSelectable
                     )
                 ){
+                    // TODO: handle formations
                     selectionModel.all((marker)=>{
                         const markerPoint = marker.mesh.position;
-                        const markerWorldPoint = treadmill.worldPointFor(marker.mesh.position);
-                        if(window.tools){
-                            window.tools.showPoint(point, 'local', '#FF0000');
-                            window.tools.showPoint(worldPoint, 'world', '#990000');
+                        const markerWorldPoint = treadmill.engine.worldPositionFor(marker.mesh.position);
+                        /*tools((tool)=>{
+                            tool.showPoint(point, 'local', '#FF0000');
+                            tool.showPoint(worldPoint, 'world', '#990000');
+                        });*/
+                        if(onClick){
+                            onClick(marker)
+                        }else{
+                            marker.action('moveTo', {}, worldPoint, treadmill);
                         }
-                        if(!meta.shift){
-                            marker.doing = [];
-                        }
-                        marker.action('moveTo', worldPoint, {}, treadmill);
-                        //marker.action('pathTo', worldPoint, {}, treadmill);
                     });
                 }
                 if(foundMarker){
-                    if(!meta.shift) selectionModel.clear();
-                    selectionModel.add(foundMarker)
-                    //selected = [foundMarker];
+                    if(!event.shiftKey) selectionModel.clear();
+                    selectionModel.add(foundMarker);
                 }
             }
         }

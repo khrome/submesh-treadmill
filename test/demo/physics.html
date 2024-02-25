@@ -43,15 +43,24 @@
     <body>
         <div class="game-world"></div>
         <script type="module">
-            import { Treadmill, Marker } from 'submesh-treadmill';
+            import { 
+                Avatar, 
+                Marker, 
+                Monster, 
+                Projectile, 
+                PhysicsProjectile, 
+                Scenery
+            } from '../../src/default-markers.mjs';
+            import { Treadmill } from '../../submesh-treadmill.mjs';
             (async ()=>{
                 const treadmill = new Treadmill({
                     voxelFile: '/src/submesh-voxels.mjs',
+                    markerTypesFile: '/src/default-markers.mjs',
                     container: '.game-world',
                     debug: true
                 });
-                await treadmill.preload([Marker]);
-                const avatar = new Marker({
+                await treadmill.preload([Marker, Avatar]);
+                const avatar = new Avatar({
                     id : 'player-avatar',
                     meshAttached: true,
                     position:{
@@ -65,6 +74,23 @@
                 treadmill.addMarker(avatar);
                 treadmill.focusOn(avatar);
                 treadmill.start();
+                treadmill.engine.once('load', ()=>{
+                    //console.log('loaded')
+                    //setTimeout(()=>{
+                        //treadmill.start();
+                        /*
+                        treadmill.engine.markers.forEach((marker)=>{
+                            const position = {
+                                x: (Math.random()*48 -16),
+                                y: (Math.random()*48 -16),
+                                z: 0
+                            };
+                            const action = 'moveTo';
+                            //const action = 'turn';
+                            marker.action(action, {}, position);
+                        }); //*/
+                    //}, 1000);
+                });
             })();
         </script>
     </body>
